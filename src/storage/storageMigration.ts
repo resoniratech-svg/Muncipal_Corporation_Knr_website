@@ -69,7 +69,7 @@ const INITIAL_AUDIT_LOG: AuditLogEntry[] = [
 ];
 
 const INITIAL_SETTINGS: AppSettings = {
-  dataMode: 'deck-exact',
+  dataMode: 'harmonized',
   autoEscalationSimulation: false,
   smsSimulationActive: true,
 };

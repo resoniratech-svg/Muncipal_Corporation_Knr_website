@@ -10,7 +10,7 @@ export interface AppConfig {
 }
 
 export const APP_CONFIG: AppConfig = {
-  dataMode: 'deck-exact',
+  dataMode: 'harmonized',
   fiscalYear: 'FY 2024-25',
   reportMonth: 'May 2024',
   lastUpdated: '10:30 AM',

@@ -159,11 +159,11 @@ class StorageService {
       projects: this.getItem(STORAGE_KEYS.PROJECTS, []) || [],
       auditLog: this.getItem(STORAGE_KEYS.AUDIT_LOG, []) || [],
       settings: this.getItem(STORAGE_KEYS.SETTINGS, {
-        dataMode: 'deck-exact',
+        dataMode: 'harmonized',
         autoEscalationSimulation: false,
         smsSimulationActive: true,
       }) || {
-        dataMode: 'deck-exact',
+        dataMode: 'harmonized',
         autoEscalationSimulation: false,
         smsSimulationActive: true,
       },

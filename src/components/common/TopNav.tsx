@@ -93,7 +93,7 @@ const linkClass = (isActive: boolean) =>
   }`;
 
 export const TopNav: React.FC = () => {
-  const { dataMode, setDataMode, activeWardId, setActiveWardId, wards } = useApp();
+  const { activeWardId, setActiveWardId, wards } = useApp();
   const { currentUser, activeRole, logout, previewRole, setPreviewRole } = useAuth();
   const { t } = usePrefs();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -126,28 +126,6 @@ export const TopNav: React.FC = () => {
     logout();
     navigate('/login');
   };
-
-  const dataModeToggle = (
-    <div role="group" aria-label="Data mode" className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 shrink-0">
-      {(
-        [
-          { mode: 'deck-exact', label: 'Deck-Exact', on: 'bg-amber-400 text-slate-950', title: 'Shows exact slide numbers printed on each page' },
-          { mode: 'harmonized', label: 'Harmonized', on: 'bg-kmc-green text-white', title: 'Harmonizes totals (Budget ₹315 Cr, 12,458 Complaints) across all screens' },
-        ] as const
-      ).map((o) => (
-        <button
-          key={o.mode}
-          type="button"
-          onClick={() => setDataMode(o.mode)}
-          aria-pressed={dataMode === o.mode}
-          title={o.title}
-          className={`h-8 px-2.5 rounded-md text-[11px] font-bold uppercase whitespace-nowrap transition-colors ${dataMode === o.mode ? `${o.on} shadow` : 'text-slate-300 hover:text-white'}`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
 
   const wardPicker = (id: string, full = false) => (
     <div className={`flex items-center gap-1.5 ${full ? 'w-full' : 'shrink-0'}`}>
@@ -221,7 +199,6 @@ export const TopNav: React.FC = () => {
             {currentUser && (
               <div className="hidden xl:flex items-center gap-2">
                 <DemoMenu />
-                {isStaff && dataModeToggle}
                 {canPickWard && wardPicker('topnav-ward')}
                 {isStaff && slidesButton()}
               </div>
@@ -389,7 +366,6 @@ export const TopNav: React.FC = () => {
             {currentUser && (
               <div className="mt-3 pt-3 border-t border-slate-800 flex flex-wrap items-center gap-2">
                 <DemoMenu />
-                {isStaff && dataModeToggle}
                 {isStaff && slidesButton()}
                 {canPickWard && <div className="w-full">{wardPicker('drawer-ward', true)}</div>}
               </div>

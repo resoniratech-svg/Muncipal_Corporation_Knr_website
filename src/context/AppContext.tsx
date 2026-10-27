@@ -95,7 +95,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [dataMode, setDataMode] = useState<DataMode>(() => {
     const settings = storageService.getItem<{ dataMode: DataMode }>(STORAGE_KEYS.SETTINGS);
-    return settings?.dataMode || APP_CONFIG.dataMode;
+    return settings?.dataMode === 'harmonized' ? 'harmonized' : 'harmonized';
   });
 
   const [activeWardId, setActiveWardId] = useState<number>(27);
