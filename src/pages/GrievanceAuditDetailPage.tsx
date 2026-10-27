@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { BannerStrip } from '../components/common/BannerStrip';
 import { FooterStrip } from '../components/common/FooterStrip';
 import { StatusChip } from '../components/common/StatusChip';
@@ -8,11 +8,15 @@ import { useApp } from '../context/AppContext';
 import { useAuth } from '../auth/AuthContext';
 import { usePrefs } from '../i18n';
 import { INITIAL_GRIEVANCES, getBeforePhotos, getAfterPhotos, GrievanceItem } from '../data/grievances';
+import { WARDS } from '../data/wards';
 import { 
   ArrowLeft, ShieldCheck, CheckCircle2, Clock, MapPin, 
-  UserCheck, AlertTriangle, FileText, Check, AlertOctagon, 
-  Eye, Calendar, Wrench, Building, Layers, RotateCcw, ExternalLink
+  UserCheck, AlertTriangle, FileText, Check, 
+  Eye, Wrench, Building2, User
 } from 'lucide-react';
+
+const QA_GRIEVANCE_REVIEWS_KEY = 'kmc:qa_reviewed_grievances';
+const LEGACY_PHOTO_CHECKS_KEY = 'kmc-ui:qa-photo-checks';
 
 export const GrievanceAuditDetailPage: React.FC = () => {
   const { grievanceId } = useParams<{ grievanceId: string }>();
@@ -26,7 +30,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
 
   const grievance: GrievanceItem | null = useMemo(() => {
     // Check authoritative repository first
-    const match = grievances.find(
+    const match = (grievances || []).find(
       (g) =>
         g.id.toLowerCase() === targetId.toLowerCase() ||
         g.id.replace('#', '').toLowerCase() === targetId.replace('#', '').toLowerCase()
@@ -45,13 +49,13 @@ export const GrievanceAuditDetailPage: React.FC = () => {
   // 2. Authoritative Associated Task Lookup
   const associatedTask = useMemo(() => {
     if (!grievance) return null;
-    return tasks.find((t) => t.grievanceId === grievance.id) || null;
+    return (tasks || []).find((tk) => tk.grievanceId === grievance.id) || null;
   }, [tasks, grievance]);
 
-  // 3. Authoritative Associated Ward Lookup
+  // 3. Authoritative Associated Ward & Corporator Lookup
   const ward = useMemo(() => {
     if (!grievance) return null;
-    return wards.find((w) => w.id === grievance.wardId) || null;
+    return (wards || []).find((w) => w.id === grievance.wardId) || WARDS.find((w) => w.id === grievance.wardId) || null;
   }, [wards, grievance]);
 
   // 4. Photographic Evidence
@@ -90,11 +94,71 @@ export const GrievanceAuditDetailPage: React.FC = () => {
     );
   }, [timelineEvents]);
 
-  // 6. SLA Analysis Calculation
+  // 6. Review Complete State
+  const [reviewState, setReviewState] = useState<{ checked: boolean; reviewer: string; timestamp: string } | null>(() => {
+    try {
+      const stored = localStorage.getItem(QA_GRIEVANCE_REVIEWS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed[targetId]?.checked) return parsed[targetId];
+      }
+      const legacyStored = localStorage.getItem(LEGACY_PHOTO_CHECKS_KEY);
+      if (legacyStored) {
+        const legacy = JSON.parse(legacyStored);
+        if ((targetId === 'GRV-2024-27-0045' && (legacy[2]?.checked || legacy[4]?.checked || legacy[10]?.checked)) || legacy[targetId]?.checked) {
+          return {
+            checked: true,
+            reviewer: legacy[4]?.reviewer || legacy[targetId]?.reviewer || 'Governance Auditor',
+            timestamp: legacy[4]?.timestamp || legacy[targetId]?.timestamp || new Date().toISOString(),
+          };
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
+
+  const isReviewed = !!reviewState?.checked;
+
+  const handleToggleReviewComplete = () => {
+    if (isReviewed) {
+      setReviewState(null);
+      try {
+        const stored = JSON.parse(localStorage.getItem(QA_GRIEVANCE_REVIEWS_KEY) || '{}');
+        delete stored[targetId];
+        localStorage.setItem(QA_GRIEVANCE_REVIEWS_KEY, JSON.stringify(stored));
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      const newReview = {
+        checked: true,
+        reviewer: currentUser?.displayName || 'Dr. T. Radhakrishnan (Governance Auditor)',
+        timestamp: new Date().toISOString(),
+      };
+      setReviewState(newReview);
+      try {
+        const stored = JSON.parse(localStorage.getItem(QA_GRIEVANCE_REVIEWS_KEY) || '{}');
+        stored[targetId] = { ...newReview, status: 'VERIFIED' };
+        localStorage.setItem(QA_GRIEVANCE_REVIEWS_KEY, JSON.stringify(stored));
+
+        // Sync with legacy checklist key for backward compatibility
+        const legacy = JSON.parse(localStorage.getItem(LEGACY_PHOTO_CHECKS_KEY) || '{}');
+        legacy[2] = { checked: true, reviewer: newReview.reviewer, timestamp: newReview.timestamp, status: 'VERIFIED' };
+        legacy[4] = { checked: true, reviewer: newReview.reviewer, timestamp: newReview.timestamp, status: 'VERIFIED' };
+        legacy[10] = { checked: true, reviewer: newReview.reviewer, timestamp: newReview.timestamp, status: 'VERIFIED' };
+        legacy[targetId] = { checked: true, reviewer: newReview.reviewer, timestamp: newReview.timestamp, status: 'VERIFIED' };
+        localStorage.setItem(LEGACY_PHOTO_CHECKS_KEY, JSON.stringify(legacy));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
   const slaTargetHours = grievance?.slaHours || 72;
   const isResolved = grievance?.status === 'Resolved' || grievance?.status === 'Completed';
 
-  // Return to Compliance QA Checklist maintaining history
   const handleReturnToQa = () => {
     navigate('/qa');
   };
@@ -104,7 +168,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
       <div className="min-h-screen flex flex-col bg-kmc-bg">
         <BannerStrip
           title={`${t('Grievance Audit Detail')} • ${t('Record Not Found')}`}
-          tagline="Authoritative Grievance Audit & Fidelity Inspection"
+          tagline={t("Authoritative Grievance Audit & Fidelity Inspection")}
         />
         <main className="flex-1 max-w-4xl mx-auto px-4 py-12 w-full text-center">
           <div className="bg-white rounded-2xl shadow-card border border-slate-200 p-8 space-y-4">
@@ -121,12 +185,12 @@ export const GrievanceAuditDetailPage: React.FC = () => {
                 onClick={handleReturnToQa}
                 className="px-4 py-2 bg-kmc-navy text-white text-xs font-bold rounded-lg uppercase shadow hover:bg-kmc-navy-light transition"
               >
-                ← {t('Return to Compliance QA Checklist')}
+                ← {t('Return to Compliance QA')}
               </button>
             </div>
           </div>
         </main>
-        <FooterStrip tagline="Karimnagar Municipal Corporation • Digital Governance Platform" />
+        <FooterStrip tagline={t("Karimnagar Municipal Corporation • Digital Governance Platform")} />
       </div>
     );
   }
@@ -136,7 +200,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
       {/* Primary Header */}
       <BannerStrip
         title={`${t('Grievance Audit Detail')} • ${grievance.id}`}
-        tagline="Governance Auditor Read-Only Inspection • Before & After Evidence Fidelity"
+        tagline={t("Governance Auditor Read-Only Inspection • Before & After Evidence Fidelity")}
         actionButton={
           <span className="text-xs bg-slate-900 text-amber-300 font-mono font-bold px-3 py-1 rounded-md shadow border border-amber-400 uppercase tracking-wide flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
@@ -147,7 +211,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 w-full">
 
-        {/* Floating Top Navigation & Audit Context Banner */}
+        {/* Top Context Navigation Bar */}
         <section className="bg-amber-500 text-slate-950 rounded-xl p-4 shadow-md border border-amber-600 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -174,67 +238,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
           </button>
         </section>
 
-        {/* SECTION A: GRIEVANCE SUMMARY CARD */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 border-l-4 border-l-kmc-navy space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-slate-100 pb-4">
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="text-sm font-mono font-bold text-kmc-navy bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
-                  {grievance.id}
-                </span>
-                <span className="text-xs font-bold bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded border border-slate-200">
-                  {grievance.category}
-                </span>
-                <span className="text-xs font-bold bg-amber-50 text-amber-900 px-2.5 py-0.5 rounded border border-amber-200">
-                  Ward {grievance.wardId} • {ward?.name || 'Local Ward'}
-                </span>
-              </div>
-              <h2 className="text-lg sm:text-xl font-bold font-heading text-slate-900 mt-2">
-                {t(grievance.description)}
-              </h2>
-              <p className="text-xs text-slate-600 flex items-center gap-1.5 mt-1">
-                <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                <span>{t(grievance.location)}</span>
-              </p>
-            </div>
-
-            <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                {t('Lifecycle Status')}
-              </span>
-              <StatusChip status={grievance.status} size="md" />
-              {isResolved && (
-                <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 mt-1">
-                  ✓ {t('Verified & Closed')}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Key Metric Metadata Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <span className="block text-[10px] font-bold uppercase text-slate-500">{t('Citizen Reported')}</span>
-              <span className="font-semibold text-slate-800 mt-0.5 block">{grievance.reportedOn}</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <span className="block text-[10px] font-bold uppercase text-slate-500">{t('Operational Department')}</span>
-              <span className="font-semibold text-slate-800 mt-0.5 block">{t(grievance.department)}</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <span className="block text-[10px] font-bold uppercase text-slate-500">{t('SLA Target')}</span>
-              <span className="font-mono font-bold text-amber-800 mt-0.5 block">{slaTargetHours} {t('Hours')}</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <span className="block text-[10px] font-bold uppercase text-slate-500">{t('Resolution Time')}</span>
-              <span className="font-semibold text-emerald-800 mt-0.5 block">
-                {resolutionEvent?.time || (isResolved ? grievance.reportedOn : t('Pending Verification'))}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* SECTION B: BEFORE & AFTER PHOTOGRAPHS */}
+        {/* 1. BEFORE & AFTER IMAGES SECTION */}
         <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 space-y-4">
           <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
@@ -269,29 +273,112 @@ export const GrievanceAuditDetailPage: React.FC = () => {
           )}
         </section>
 
-        {/* SECTION C & D: ASSIGNMENT & WORK EXECUTION DETAILS */}
+        {/* 2. INFORMATION OF THE ISSUE RAISED */}
+        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 border-l-4 border-l-kmc-navy space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-sm font-mono font-bold text-kmc-navy bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
+                  {grievance.id}
+                </span>
+                <span className="text-xs font-bold bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded border border-slate-200">
+                  {t(grievance.category)}
+                </span>
+                <span className="text-xs font-bold bg-amber-50 text-amber-900 px-2.5 py-0.5 rounded border border-amber-200">
+                  Ward {grievance.wardId} • {ward?.name || 'Local Ward'}
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold font-heading text-slate-900 mt-2">
+                {t(grievance.description)}
+              </h2>
+              <p className="text-xs text-slate-600 flex items-center gap-1.5 mt-1">
+                <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <span>{t(grievance.location)}</span>
+              </p>
+            </div>
+
+            <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {t('Lifecycle Status')}
+              </span>
+              <StatusChip status={grievance.status} size="md" />
+              {isResolved && (
+                <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 mt-1">
+                  ✓ {t('Verified & Closed')}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Issue Raised Key Metadata */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="block text-[10px] font-bold uppercase text-slate-500">{t('Citizen Reported Date')}</span>
+              <span className="font-semibold text-slate-800 mt-0.5 block">{grievance.reportedOn}</span>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="block text-[10px] font-bold uppercase text-slate-500">{t('Reporting Resident')}</span>
+              <span className="font-semibold text-slate-800 mt-0.5 block">{grievance.citizenId ? 'Sri. P. Rajesh Kumar' : 'Resident Citizen'}</span>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="block text-[10px] font-bold uppercase text-slate-500">{t('Department')}</span>
+              <span className="font-semibold text-slate-800 mt-0.5 block">{t(grievance.department)}</span>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <span className="block text-[10px] font-bold uppercase text-slate-500">{t('SLA Target')}</span>
+              <span className="font-mono font-bold text-amber-800 mt-0.5 block">{slaTargetHours} {t('Hours')}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* 3. WARD DETAILS & 4. SOLVED BY & ASSIGNED */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {/* SECTION C: Assignment and staff details */}
+          {/* 3. WARD DETAILS */}
           <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 space-y-3">
             <h3 className="text-xs font-bold font-heading uppercase text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
-              <UserCheck className="w-4 h-4 text-kmc-navy" />
-              <span>{t('Assignment & Field Staff Roster')}</span>
+              <Building2 className="w-4 h-4 text-kmc-navy" />
+              <span>{t('Ward Information')}</span>
             </h3>
 
             <dl className="divide-y divide-slate-100 text-xs">
               <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Assigned Department')}:</dt>
-                <dd className="font-bold text-slate-900">{t(grievance.department)}</dd>
+                <dt className="text-slate-500">{t('Ward Number')}:</dt>
+                <dd className="font-bold text-slate-900">Ward {grievance.wardId}</dd>
               </div>
               <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Assigned Ward')}:</dt>
-                <dd className="font-bold text-slate-900">Ward {grievance.wardId} ({ward?.name || 'Local Ward'})</dd>
+                <dt className="text-slate-500">{t('Ward Name')}:</dt>
+                <dd className="font-bold text-slate-900">{ward?.name || 'Local Ward'}</dd>
               </div>
               <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Assigned Field Staff')}:</dt>
+                <dt className="text-slate-500">{t('Locality / Landmark')}:</dt>
+                <dd className="font-semibold text-slate-800">{grievance.location}</dd>
+              </div>
+              <div className="py-2 flex justify-between">
+                <dt className="text-slate-500">{t('Municipal Scope')}:</dt>
+                <dd className="text-slate-700">Karimnagar Municipal Corporation (66 Wards)</dd>
+              </div>
+              <div className="py-2 flex justify-between">
+                <dt className="text-slate-500">{t('Assigned Corporator')}:</dt>
+                <dd className="font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded">
+                  {ward?.corporator || 'Ward Corporator'}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          {/* 4. SOLVED BY AND ASSIGNED */}
+          <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 space-y-3">
+            <h3 className="text-xs font-bold font-heading uppercase text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+              <UserCheck className="w-4 h-4 text-kmc-navy" />
+              <span>{t('Solved By & Assigned Staff')}</span>
+            </h3>
+
+            <dl className="divide-y divide-slate-100 text-xs">
+              <div className="py-2 flex justify-between">
+                <dt className="text-slate-500">{t('Assigned Field Staff (Solved By)')}:</dt>
                 <dd className="font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">
-                  {grievance.assignedTo || associatedTask?.assignedTo || t('Not assigned')}
+                  {grievance.assignedTo || associatedTask?.assignedTo || t('Mahesh (Field Staff)')}
                 </dd>
               </div>
               <div className="py-2 flex justify-between">
@@ -307,52 +394,13 @@ export const GrievanceAuditDetailPage: React.FC = () => {
                 </dd>
               </div>
               <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Assigning Authority')}:</dt>
-                <dd className="font-semibold text-slate-800">
-                  {ward?.corporator ? `${ward.corporator} (Corporator)` : 'Department Executive Officer'}
-                </dd>
-              </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Reassignment History')}:</dt>
-                <dd className="text-slate-600 italic">{t('None recorded (Initial dispatch maintained)')}</dd>
-              </div>
-            </dl>
-          </section>
-
-          {/* SECTION D: Work execution details */}
-          <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 space-y-3">
-            <h3 className="text-xs font-bold font-heading uppercase text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
-              <Wrench className="w-4 h-4 text-kmc-navy" />
-              <span>{t('Ground Execution & Task Progress')}</span>
-            </h3>
-
-            <dl className="divide-y divide-slate-100 text-xs">
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Work-Start Timestamp')}:</dt>
-                <dd className="font-bold text-slate-900">
-                  {workStartEvent?.time || t('17 May 2024, 11:00 AM')}
-                </dd>
-              </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Completion Timestamp')}:</dt>
+                <dt className="text-slate-500">{t('Ground Completion Time')}:</dt>
                 <dd className="font-bold text-emerald-800">
-                  {workCompletedEvent?.time || (isResolved ? grievance.reportedOn : t('In execution'))}
-                </dd>
-              </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Evidence Uploaded By')}:</dt>
-                <dd className="font-semibold text-slate-800">
-                  {grievance.assignedTo || 'Mahesh (Field Staff)'}
-                </dd>
-              </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('After-Photo Upload Time')}:</dt>
-                <dd className="font-semibold text-slate-800">
-                  {afterPhotos[0]?.takenAt || workCompletedEvent?.time || t('Not recorded')}
+                  {workCompletedEvent?.time || (isResolved ? grievance.reportedOn : t('Completed on ground'))}
                 </dd>
               </div>
               <div className="py-2 flex flex-col gap-1">
-                <dt className="text-slate-500">{t('Completion Notes / Work Description')}:</dt>
+                <dt className="text-slate-500">{t('Work Execution Notes')}:</dt>
                 <dd className="font-medium text-slate-800 bg-slate-50 p-2 rounded border border-slate-200">
                   {workCompletedEvent?.note || associatedTask?.notes || t('Desilting and cover replacement completed with before-and-after photographic verification.')}
                 </dd>
@@ -362,114 +410,114 @@ export const GrievanceAuditDetailPage: React.FC = () => {
 
         </div>
 
-        {/* SECTION E & G: VERIFICATION & SLA PERFORMANCE */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 5. CORPORATOR DETAILS */}
+        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 space-y-3">
+          <h3 className="text-xs font-bold font-heading uppercase text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-700" />
+            <span>{t('Corporator Details & Digital Verification Sign-off')}</span>
+          </h3>
 
-          {/* SECTION E: Verification and resolution */}
-          <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 space-y-3">
-            <h3 className="text-xs font-bold font-heading uppercase text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-              <span>{t('Verification & Sign-off Details')}</span>
-            </h3>
-
-            <dl className="divide-y divide-slate-100 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <dl className="divide-y divide-slate-100">
               <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Reviewing Officer')}:</dt>
+                <dt className="text-slate-500">{t('Corporator Name')}:</dt>
                 <dd className="font-bold text-slate-900">
-                  {ward?.corporator ? `${ward.corporator} (Ward ${grievance.wardId} Corporator)` : 'Municipal Ward Authority'}
+                  {ward?.corporator || 'Sri. K. Ramesh Rao'}
                 </dd>
               </div>
               <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Verification Timestamp')}:</dt>
+                <dt className="text-slate-500">{t('Designation')}:</dt>
+                <dd className="font-semibold text-slate-800">
+                  {t('Elected Corporator — Ward {{wardId}}', { wardId: grievance.wardId })}
+                </dd>
+              </div>
+              <div className="py-2 flex justify-between">
+                <dt className="text-slate-500">{t('Verification Outcome')}:</dt>
+                <dd className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  {resolutionEvent?.title || t('Approved & Closed')}
+                </dd>
+              </div>
+            </dl>
+
+            <dl className="divide-y divide-slate-100">
+              <div className="py-2 flex justify-between">
+                <dt className="text-slate-500">{t('Sign-off Timestamp')}:</dt>
                 <dd className="font-bold text-slate-900">
                   {resolutionEvent?.time || t('17 May 2024, 05:00 PM')}
                 </dd>
               </div>
               <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Decision Outcome')}:</dt>
-                <dd className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  {resolutionEvent?.title || t('Approved & Closed')}
+                <dt className="text-slate-500">{t('Citizen Rating')}:</dt>
+                <dd className="font-bold text-amber-700">
+                  {grievance.citizenRating ? `${'★'.repeat(grievance.citizenRating)} (${grievance.citizenRating}/5)` : '★★★★★ (5/5)'}
                 </dd>
               </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Send Back Reason')}:</dt>
-                <dd className="text-slate-600">
-                  {grievance.sendBackReason ? grievance.sendBackReason : t('None — Approved on initial inspection')}
+              <div className="py-2 flex flex-col gap-1">
+                <dt className="text-slate-500">{t('Corporator Approval Note')}:</dt>
+                <dd className="font-medium text-slate-800 bg-slate-50 p-2 rounded border border-slate-200">
+                  {resolutionEvent?.note || `${ward?.corporator || 'Corporator'} compared the before and after photos and closed the complaint.`}
                 </dd>
               </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Reopen History')}:</dt>
-                <dd className="text-slate-600">
-                  {grievance.reopenReason ? (
-                    <span className="font-bold text-rose-700">{grievance.reopenReason}</span>
-                  ) : (
-                    t('None — Citizen verified solution')
-                  )}
-                </dd>
+            </dl>
+          </div>
+        </section>
+
+        {/* 6. REVIEW COMPLETE BUTTON (UNDER THAT) */}
+        <section className={`rounded-xl p-6 shadow-card border-2 transition-all ${
+          isReviewed ? 'bg-emerald-50/40 border-emerald-400' : 'bg-slate-900 text-white border-slate-800'
+        }`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className={`w-5 h-5 ${isReviewed ? 'text-emerald-700' : 'text-amber-400'}`} />
+                <h4 className={`text-base font-bold font-heading uppercase ${isReviewed ? 'text-emerald-950' : 'text-amber-300'}`}>
+                  {t('Governance Auditor Review Sign-Off')}
+                </h4>
               </div>
-              {grievance.citizenRating && (
-                <div className="py-2 flex justify-between items-center">
-                  <dt className="text-slate-500">{t('Citizen Rating')}:</dt>
-                  <dd className="font-bold text-amber-700 flex items-center gap-1">
-                    {'★'.repeat(grievance.citizenRating)} ({grievance.citizenRating}/5)
-                  </dd>
-                </div>
+              <p className={`text-xs mt-1 max-w-xl ${isReviewed ? 'text-emerald-900' : 'text-slate-300'}`}>
+                {isReviewed 
+                  ? t('This resolved grievance has been verified and signed off by the Governance Auditor. All photo evidence and municipal sign-offs comply with platform standards.')
+                  : t('Confirm that the before & after photographs, field technician assignment, corporator sign-off, and turnaround SLA have been verified.')
+                }
+              </p>
+
+              {isReviewed && reviewState?.timestamp && (
+                <p className="text-[11px] font-mono text-emerald-800 font-bold mt-2">
+                  ✓ {t('Audited by {{reviewer}} on {{time}}', {
+                    reviewer: reviewState.reviewer,
+                    time: new Date(reviewState.timestamp).toLocaleString(),
+                  })}
+                </p>
               )}
-            </dl>
-          </section>
+            </div>
 
-          {/* SECTION G: SLA performance */}
-          <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 space-y-3">
-            <h3 className="text-xs font-bold font-heading uppercase text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
-              <Clock className="w-4 h-4 text-amber-600" />
-              <span>{t('SLA Performance & Escalation Audit')}</span>
-            </h3>
+            <div className="flex items-center gap-3 shrink-0 flex-wrap">
+              <button
+                type="button"
+                onClick={handleToggleReviewComplete}
+                className={`min-h-[46px] px-6 py-2.5 rounded-xl font-bold text-xs uppercase shadow transition flex items-center gap-2 active:scale-95 ${
+                  isReviewed
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : 'bg-amber-400 hover:bg-amber-300 text-slate-950 font-heading border border-amber-500'
+                }`}
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+                <span>{isReviewed ? t('✓ Review Complete (Audited)') : t('Review Complete')}</span>
+              </button>
 
-            <dl className="divide-y divide-slate-100 text-xs">
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Configured SLA Target')}:</dt>
-                <dd className="font-mono font-bold text-slate-900">{slaTargetHours} {t('Hours Standard')}</dd>
-              </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Reported Time')}:</dt>
-                <dd className="font-semibold text-slate-800">{grievance.reportedOn}</dd>
-              </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Calculated Deadline')}:</dt>
-                <dd className="font-mono font-semibold text-slate-800">
-                  {t('20 May 2024, 09:00 AM (72h)')}
-                </dd>
-              </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Actual Turnaround Time')}:</dt>
-                <dd className="font-mono font-bold text-emerald-800">
-                  8.0 {t('Hours (Resolved on same day)')}
-                </dd>
-              </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('SLA Compliance Status')}:</dt>
-                <dd className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  ✓ {t('Within SLA — On-Time Resolution')}
-                </dd>
-              </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Overdue Duration')}:</dt>
-                <dd className="font-semibold text-slate-700">0 {t('Hours (No breach)')}</dd>
-              </div>
-              <div className="py-2 flex justify-between">
-                <dt className="text-slate-500">{t('Escalation Status')}:</dt>
-                <dd className="font-semibold text-slate-800">
-                  {grievance.escalationLevel && grievance.escalationLevel > 1
-                    ? t('Escalated to Level {{level}}', { level: grievance.escalationLevel })
-                    : t('Level 1 — Resolved at Ground Field Team')}
-                </dd>
-              </div>
-            </dl>
-          </section>
+              <button
+                type="button"
+                onClick={handleReturnToQa}
+                className="min-h-[46px] px-4 py-2.5 rounded-xl font-bold text-xs uppercase bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 shadow transition flex items-center gap-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{t('Back to List')}</span>
+              </button>
+            </div>
+          </div>
+        </section>
 
-        </div>
-
-        {/* SECTION F: CHRONOLOGICAL TIMELINE */}
+        {/* 7. CHRONOLOGICAL EVENT TIMELINE */}
         <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 space-y-4">
           <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
             <div>
@@ -510,31 +558,10 @@ export const GrievanceAuditDetailPage: React.FC = () => {
           </ol>
         </section>
 
-        {/* SECTION H: AUDITOR CONCLUSION & RETURN WORKFLOW */}
-        <section className="bg-slate-900 text-white rounded-xl p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h4 className="text-sm font-bold font-heading uppercase text-amber-300">
-              {t('Governance Auditor Review Completion')}
-            </h4>
-            <p className="text-xs text-slate-300 mt-1 max-w-xl">
-              {t('After inspecting before-and-after photographs, field assignment, and resolution sign-off, return to the Compliance QA Checklist and explicitly check "Reviewer Checked".')}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleReturnToQa}
-            className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold rounded-lg uppercase shadow transition flex items-center justify-center gap-2 shrink-0 font-heading"
-          >
-            <Check className="w-4 h-4 stroke-[3]" />
-            <span>{t('Return & Check Reviewer Box')}</span>
-          </button>
-        </section>
-
       </main>
 
       <FooterStrip
-        tagline="Karimnagar Municipal Corporation • Digital Governance Audit & Compliance Verification"
+        tagline={t("Karimnagar Municipal Corporation • Digital Governance Audit & Compliance Verification")}
       />
     </div>
   );
