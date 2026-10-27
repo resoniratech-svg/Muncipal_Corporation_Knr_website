@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  h1, h2, h3, .font-heading {
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 0.02em;
+  }
+}
+
+@layer components {
+  /* Shared text field / dropdown style for staff and admin forms */
+  .form-field {
+    @apply w-full min-h-[40px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-kmc-navy focus:ring-2 focus:ring-kmc-navy/20;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Pulse animation for live indicators */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-live {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Text size toggle (A- / A / A+): rem-based sizes scale with the root font size */
+html { font-size: 16px; }
+html[data-font='sm'] { font-size: 14px; }
+html[data-font='lg'] { font-size: 18px; }
+
+/* Telugu and Hindi need fonts with those scripts; Oswald headings have no Indic glyphs */
+html[lang='te'] body, html[lang='te'] .font-heading, html[lang='te'] h1, html[lang='te'] h2, html[lang='te'] h3 {
+  font-family: 'Noto Sans Telugu', 'Inter', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+html[lang='hi'] body, html[lang='hi'] .font-heading, html[lang='hi'] h1, html[lang='hi'] h2, html[lang='hi'] h3 {
+  font-family: 'Noto Sans Devanagari', 'Inter', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+/* Citizen screens: never below 16px body text; long words wrap instead of overflowing */
+.citizen-screen { font-size: 1rem; overflow-wrap: anywhere; }
+
+/* Visible focus for keyboard users */
+:focus-visible {
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+/* Low-end phones and motion sensitivity: no animation when the user asks for less motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* One dropdown look across every portal: native select with a consistent chevron.
+   Unlayered so it wins over padding utilities; .select-dark is for dark bars. */
+select:not([multiple]) {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 1rem;
+  padding-right: 2.1rem;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+select.select-dark {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fcd34d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 0.5rem center;
+}
+select:disabled { cursor: not-allowed; opacity: 0.6; }
+
+button:disabled, [aria-disabled='true'] { cursor: not-allowed; }
+::placeholder { color: #64748b; opacity: 1; }

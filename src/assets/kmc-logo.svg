@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Outer Gold Ring -->
+  <circle cx="50" cy="50" r="46" stroke="#D4AF37" stroke-width="3" fill="#0B2A5B"/>
+  <circle cx="50" cy="50" r="41" stroke="#F1D26E" stroke-width="1.5" stroke-dasharray="2 2"/>
+  
+  <!-- Ashoka Chakra Style / Municipal Emblem Star -->
+  <circle cx="50" cy="50" r="28" fill="#163B75" stroke="#D4AF37" stroke-width="1.5"/>
+  
+  <!-- Architectural / Tower Silhouette (Karimnagar Clock Tower / Fort representation) -->
+  <path d="M42 66 L58 66 L56 42 L53 42 L53 32 L50 24 L47 32 L47 42 L44 42 Z" fill="#D4AF37"/>
+  <rect x="48.5" y="36" width="3" height="4" fill="#0B2A5B"/>
+  <circle cx="50" cy="46" r="2.5" fill="#0B2A5B"/>
+  <rect x="46" y="52" width="8" height="2" fill="#0B2A5B"/>
+  <rect x="46" y="58" width="8" height="2" fill="#0B2A5B"/>
+  
+  <!-- Olive Wreath Branches -->
+  <path d="M22 56 C20 40 30 28 38 24" stroke="#7CB342" stroke-width="2" stroke-linecap="round"/>
+  <path d="M78 56 C80 40 70 28 62 24" stroke="#7CB342" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Base Ribbon -->
+  <path d="M30 73 Q50 78 70 73 L74 81 Q50 86 26 81 Z" fill="#D4AF37"/>
+  <text x="50" y="80" text-anchor="middle" font-size="5" font-weight="bold" fill="#0B2A5B" font-family="sans-serif">KMC</text>
+  
+  <!-- Surrounding text arc representation -->
+  <circle cx="50" cy="50" r="35" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+</svg>
