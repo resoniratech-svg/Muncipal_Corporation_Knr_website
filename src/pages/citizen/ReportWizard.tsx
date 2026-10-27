@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, LocateFixed, Lightbulb, Loader2, AlertCircle, MessageSquareText } from 'lucide-react';
+import { CheckCircle2, LocateFixed, Lightbulb, Loader2, AlertCircle, MessageSquareText, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../auth/AuthContext';
+import { isQaInspectionActive } from '../../auth/qaInspection';
 import { usePrefs } from '../../i18n';
 import { useToast } from '../../ui/Toast';
 import { PROBLEM_CATEGORIES, ProblemCategory } from '../../data/categories';
@@ -323,6 +324,13 @@ export const ReportWizard: React.FC = () => {
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
             {error}
           </p>
+        )}
+
+        {isQaInspectionActive(currentUser) && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-300 rounded-xl text-amber-900 text-xs font-medium flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" aria-hidden="true" />
+            <span>{t("QA Inspection Mode: Complaint submission is simulated for audit verification. Live records are not altered.")}</span>
+          </div>
         )}
       </section>
 

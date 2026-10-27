@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, Permission, AuthSession } from './authTypes';
 import { DemoUserRecord } from './mockUsers';
 import { hasPermission as checkPermission, hasAnyRole } from './permissions';
+import { isQaInspectionActive } from './qaInspection';
 import { userRepository } from '../storage/repositories/userRepository';
 import { auditRepository } from '../storage/repositories/auditRepository';
 import { STORAGE_KEYS } from '../storage/storageKeys';
@@ -142,6 +143,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const toggleUserStatus = (username: string): boolean => {
+    if (currentUser?.role === 'governance_auditor' || isQaInspectionActive(currentUser)) {
+      console.warn('KMC Auth: User status toggle blocked in QA Inspection Mode.');
+      return false;
+    }
     const newStatus = userRepository.toggleActive(username);
     setUsersState(userRepository.getAll());
 
@@ -160,6 +165,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const createUser = (newRecord: DemoUserRecord): boolean => {
+    if (currentUser?.role === 'governance_auditor' || isQaInspectionActive(currentUser)) {
+      console.warn('KMC Auth: User creation blocked in QA Inspection Mode.');
+      return false;
+    }
     const success = userRepository.createUser(newRecord);
     if (success) {
       setUsersState(userRepository.getAll());
@@ -179,6 +188,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUser = (email: string, updates: Partial<User>): boolean => {
+    if (currentUser?.role === 'governance_auditor' || isQaInspectionActive(currentUser)) {
+      console.warn('KMC Auth: User updates blocked in QA Inspection Mode.');
+      return false;
+    }
     const success = userRepository.updateUser(email, updates);
     if (success) {
       setUsersState(userRepository.getAll());

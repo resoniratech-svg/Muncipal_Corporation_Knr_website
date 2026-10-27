@@ -24,6 +24,8 @@ import {
   FeedbackItem,
   AuditLogEntry,
 } from '../storage';
+import { useAuth } from '../auth/AuthContext';
+import { isQaInspectionActive } from '../auth/qaInspection';
 
 interface AppContextType {
   dataMode: DataMode;
@@ -100,6 +102,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [activeWardId, setActiveWardId] = useState<number>(27);
 
+  // Check auth session for QA inspection mode & role-based mutation guards
+  let authContext: any = null;
+  try {
+    authContext = useAuth();
+  } catch {
+    // If rendered outside AuthProvider (e.g. standalone test)
+  }
+  const currentUser = authContext?.currentUser || null;
+  const isInspectionModeActive =
+    currentUser?.role === 'governance_auditor' || isQaInspectionActive(currentUser);
+
   // Core domain entities loaded directly from repositories
   const [wards, setWards] = useState<Ward[]>(() => wardRepository.getAll());
   const [departments, setDepartments] = useState<Department[]>(() => departmentRepository.getAll());
@@ -162,6 +175,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
    * 5. Logs to system audit trail
    */
   const submitGrievance = (newItem: Partial<GrievanceItem>, citizenName?: string): GrievanceItem => {
+    // Guard: Prevent creating persistent grievances in QA Inspection Mode or for Governance Auditor
+    if (isInspectionModeActive) {
+      console.warn('KMC Grievance: Real grievance creation blocked in QA Inspection Mode.');
+      const targetWardId = newItem.wardId || activeWardId || 27;
+      const targetWard = wards.find((w) => w.id === targetWardId);
+      const corpName = targetWard?.corporator || `Ward ${targetWardId} Corporator`;
+      const dummyId = `#GRV2024-${Math.floor(10000 + Math.random() * 90000)}`;
+      return {
+        id: dummyId,
+        citizenId: currentUser?.id || 'USR-CITIZEN-01',
+        citizenName: citizenName || 'Demo Citizen (QA Preview)',
+        phone: '98480 27001',
+        wardId: targetWardId,
+        department: newItem.department || 'Engineering',
+        category: newItem.category || 'Drainage & Water Supply',
+        description: newItem.description || 'Simulated grievance preview in QA Inspection Mode',
+        location: newItem.location || 'Green Park Colony (QA Inspection)',
+        reportedOn: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        status: 'Pending',
+        slaHours: newItem.slaHours || 24,
+        latitude: newItem.latitude || 18.4386,
+        longitude: newItem.longitude || 79.1288,
+        beforePhotos: newItem.beforePhotos || [],
+        assignedCorporator: corpName,
+        history: [],
+      } as GrievanceItem;
+    }
+
     // Resolve target ward and elected corporator
     const targetWardId = newItem.wardId || activeWardId || 27;
     const targetWard = wards.find((w) => w.id === targetWardId);
@@ -210,6 +251,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
    * task → Completed, complaint → "Work Completed – Waiting for Verification" (status Completed).
    */
   const completeTaskWithPhotos = (taskId: string, photos: PhotoEvidence[], notes?: string): ActionResult => {
+    if (isInspectionModeActive) {
+      return { ok: false, error: 'Task completion with evidence is disabled in QA Inspection Mode (Read-Only Audit).' };
+    }
     const task = taskRepository.getById(taskId);
     if (!task) return { ok: false, error: 'Task not found.' };
     if (!photos.length) return { ok: false, error: 'Please upload the photo of the completed work.' };
@@ -252,6 +296,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     notes?: string,
     photo?: string
   ): ActionResult => {
+    if (isInspectionModeActive) {
+      return { ok: false, error: 'Task status updates are disabled in QA Inspection Mode (Read-Only Audit).' };
+    }
     const task = taskRepository.getById(taskId);
     if (!task) return { ok: false, error: 'Task not found.' };
 
@@ -284,6 +331,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const routeComplaint = (grievanceId: string, staffName: string, corporatorName?: string) => {
+    if (isInspectionModeActive) {
+      console.warn('KMC Task Assignment: Route complaint blocked in QA Inspection Mode.');
+      return;
+    }
     const grievance = grievanceRepository.getById(grievanceId);
     if (!grievance) return;
     const corp = corporatorName || wards.find((w) => w.id === grievance.wardId)?.corporator || 'Ward Corporator';
@@ -343,6 +394,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const approveAndClose = (grievanceId: string, corporatorName?: string) => {
+    if (isInspectionModeActive) {
+      console.warn('KMC Grievance: Approval blocked in QA Inspection Mode.');
+      return;
+    }
     const grievance = grievanceRepository.getById(grievanceId);
     if (!grievance) return;
     const corp = corporatorName || wards.find((w) => w.id === grievance.wardId)?.corporator || 'Ward Corporator';
@@ -376,6 +431,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const sendBackComplaint = (grievanceId: string, reason: string, corporatorName?: string): ActionResult => {
+    if (isInspectionModeActive) {
+      return { ok: false, error: 'Send back is disabled in QA Inspection Mode (Read-Only Audit).' };
+    }
     if (!reason.trim()) return { ok: false, error: 'Please write why the work is sent back.' };
     const grievance = grievanceRepository.getById(grievanceId);
     if (!grievance) return { ok: false, error: 'Complaint not found.' };
@@ -403,6 +461,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const reopenComplaint = (grievanceId: string, reason: string): ActionResult => {
+    if (isInspectionModeActive) {
+      return { ok: false, error: 'Escalation is disabled in QA Inspection Mode (Read-Only Audit).' };
+    }
     if (!reason.trim()) return { ok: false, error: 'Please tell us in a few words what is still wrong.' };
     const grievance = grievanceRepository.getById(grievanceId);
     if (!grievance) return { ok: false, error: 'Complaint not found.' };
@@ -449,6 +510,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     dueDate = 'Next 48 Hours',
     officerName = 'Superintending Engineer'
   ) => {
+    if (isInspectionModeActive) {
+      console.warn('KMC Tasks: Assignment blocked in QA Inspection Mode.');
+      return;
+    }
     const grievance = grievanceRepository.getById(grievanceId);
     if (!grievance) return;
 
@@ -504,6 +569,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
    * Department Officer signs off on completion and approves final resolution
    */
   const approveGrievanceResolution = (grievanceId: string, officerName = 'Superintending Engineer') => {
+    if (isInspectionModeActive) {
+      console.warn('KMC Grievance: Resolution signoff blocked in QA Inspection Mode.');
+      return;
+    }
     const grievance = grievanceRepository.getById(grievanceId);
     if (!grievance) return;
     // Closure is based on the after photo, same rule as the corporator's Approve & Close
@@ -550,6 +619,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     citizenId = 'USR-CITIZEN-01',
     citizenName = 'Resident Citizen'
   ) => {
+    if (isInspectionModeActive) {
+      console.warn('KMC Feedback: Rating blocked in QA Inspection Mode.');
+      return;
+    }
     grievanceRepository.rateGrievance(id, rating, comment);
     feedbackRepository.create({
       grievanceId: id,
@@ -576,6 +649,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
    * Admin dispatches live broadcast notice
    */
   const broadcastNotification = (item: Omit<NotificationItem, 'id' | 'timestamp'>): NotificationItem => {
+    if (isInspectionModeActive) {
+      console.warn('KMC Notifications: Broadcast blocked in QA Inspection Mode.');
+      return {
+        id: `NOTIF-PREVIEW-${Date.now()}`,
+        timestamp: 'Just now',
+        ...item,
+      } as NotificationItem;
+    }
     const created = notificationRepository.create(item);
     auditRepository.log({
       actorId: 'ADMIN',

@@ -153,7 +153,11 @@ export const QaAuditPage: React.FC = () => {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(slide.targetRoute!);
+                          const route = slide.targetRoute!;
+                          const routeWithInspect = `${route}${route.includes('?') ? '&' : '?'}qaInspect=true`;
+                          navigate(routeWithInspect, {
+                            state: { qaInspect: true, fromQa: true, slidePage: slide.page },
+                          });
                         }}
                         className="px-2.5 py-2 min-h-[36px] bg-blue-50 hover:bg-blue-100 text-kmc-navy text-xs font-semibold rounded flex items-center gap-1"
                       >

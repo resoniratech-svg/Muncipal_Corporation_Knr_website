@@ -425,6 +425,7 @@ export const DEMO_USERS: Record<string, DemoUserRecord> = {
       permissions: [
         'monitoring:view',
         'monitoring:audit',
+        'qa:inspect',
       ],
       isActive: true,
       avatarInitials: 'GA',

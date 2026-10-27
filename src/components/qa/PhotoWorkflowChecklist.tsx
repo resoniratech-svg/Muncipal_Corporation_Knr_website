@@ -80,7 +80,11 @@ export const PhotoWorkflowChecklist: React.FC = () => {
               <p className="text-slate-600 mt-0.5"><strong>{t("Result")}:</strong> {t(test.evidence)}</p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <Link to={test.route} className="min-h-[44px] px-3 rounded-lg border-2 border-slate-300 text-xs font-bold flex items-center gap-1">
+              <Link
+                to={`${test.route}${test.route.includes('?') ? '&' : '?'}qaInspect=true`}
+                state={{ qaInspect: true, fromQa: true, testNumber: test.n }}
+                className="min-h-[44px] px-3 rounded-lg border-2 border-slate-300 hover:border-kmc-navy hover:bg-slate-50 text-xs font-bold flex items-center gap-1 text-slate-800 transition"
+              >
                 {t("Open")} <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
               </Link>
               <label className="flex items-center gap-2 text-xs font-semibold min-h-[44px]">

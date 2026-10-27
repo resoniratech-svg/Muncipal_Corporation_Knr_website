@@ -21,7 +21,8 @@ export type Permission =
   | 'monitoring:view'
   | 'monitoring:audit'
   | 'budget:manage'
-  | 'users:manage';
+  | 'users:manage'
+  | 'qa:inspect';
 
 export interface User {
   id: string;

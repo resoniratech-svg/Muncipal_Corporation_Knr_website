@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { TopNav } from './components/common/TopNav';
+import { QaInspectionBanner } from './components/common/QaInspectionBanner';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { HelpGuide } from './ui/HelpGuide';
@@ -45,6 +46,9 @@ export const App: React.FC = () => {
         <Route path="/present" element={null} />
         <Route path="*" element={<TopNav />} />
       </Routes>
+
+      {/* Floating QA Inspection indicator for Governance Auditor */}
+      <QaInspectionBanner />
 
       <div className="flex-1 flex flex-col">
         <ErrorBoundary>

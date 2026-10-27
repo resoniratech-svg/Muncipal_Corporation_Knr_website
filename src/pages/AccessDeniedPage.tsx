@@ -3,8 +3,9 @@ import kmcLogo from '../assets/kmc-logo.svg';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { ROLE_DESTINATIONS, ROLE_DISPLAY_NAMES } from '../auth/permissions';
-import { ShieldAlert, ArrowLeft, LogOut, Home } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, LogOut, Home, ShieldCheck } from 'lucide-react';
 import { usePrefs } from '../i18n';
+import { isApprovedQaRoute } from '../auth/qaInspection';
 
 export const AccessDeniedPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +19,11 @@ export const AccessDeniedPage: React.FC = () => {
 
   const currentBadge = currentUser ? ROLE_DISPLAY_NAMES[currentUser.role] : null;
   const userHomeRoute = currentUser ? ROLE_DESTINATIONS[currentUser.role] : '/login';
+
+  const canInspect =
+    currentUser &&
+    (currentUser.role === 'governance_auditor' || (Array.isArray(currentUser.permissions) && currentUser.permissions.includes('qa:inspect'))) &&
+    isApprovedQaRoute(attemptedPath);
 
   return (
     <div className="min-h-screen bg-kmc-bg flex flex-col justify-between selection:bg-kmc-navy selection:text-white">
@@ -66,6 +72,30 @@ export const AccessDeniedPage: React.FC = () => {
                   <span className="font-bold uppercase text-[11px]">{requiredRoles.map(r => t(r)).join(' or ')}</span>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* QA Inspection Mode Option for Governance Auditor */}
+          {canInspect && (
+            <div className="p-3.5 bg-amber-50 border-2 border-amber-300 rounded-xl text-left space-y-2">
+              <div className="flex items-center gap-2 text-amber-950 font-bold text-xs uppercase">
+                <ShieldCheck className="w-4 h-4 text-amber-700" />
+                <span>{t("QA Compliance Inspection Available")}</span>
+              </div>
+              <p className="text-xs text-amber-900 leading-relaxed">
+                {t("As an authorized Governance Auditor, you can open this screen in read-only inspection mode to verify UI layout, workflows, and checklist compliance.")}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const target = `${attemptedPath}${attemptedPath.includes('?') ? '&' : '?'}qaInspect=true`;
+                  navigate(target, { state: { qaInspect: true, fromQa: true } });
+                }}
+                className="w-full py-2 px-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase rounded-lg shadow transition flex items-center justify-center gap-1.5"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>{t("Open in QA Inspection Mode (Read-Only Audit)")}</span>
+              </button>
             </div>
           )}
 

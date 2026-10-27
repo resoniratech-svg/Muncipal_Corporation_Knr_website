@@ -121,6 +121,19 @@ export function healDemoUsers(): void {
         user.name = user.displayName;
         userChanged = true;
       }
+      if (Array.isArray(demoUser.permissions)) {
+        if (!Array.isArray(user.permissions)) {
+          user.permissions = [...demoUser.permissions];
+          userChanged = true;
+        } else {
+          for (const perm of demoUser.permissions) {
+            if (!user.permissions.includes(perm)) {
+              user.permissions.push(perm);
+              userChanged = true;
+            }
+          }
+        }
+      }
       if (userChanged) {
         changed = true;
       }
