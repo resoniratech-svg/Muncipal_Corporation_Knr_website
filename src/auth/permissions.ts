@@ -23,7 +23,12 @@ export const ROLE_DISPLAY_NAMES: Record<UserRole, { title: string; color: string
 export const hasPermission = (user: User | null, permission: Permission): boolean => {
   if (!user || !user.isActive) return false;
   if (user.role === 'super_admin') return true;
-  if (permission === 'qa:inspect' && user.role === 'governance_auditor') return true;
+  if (
+    (permission === 'qa:inspect' || permission === 'qa:review' || permission === 'qa:test') &&
+    user.role === 'governance_auditor'
+  ) {
+    return true;
+  }
   return user.permissions.includes(permission);
 };
 

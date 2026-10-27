@@ -85,9 +85,13 @@ async function runTest() {
   assert(auditorRecord.user.role === 'governance_auditor', 'Role must strictly remain governance_auditor');
   assert(auditorRecord.user.displayName === 'Dr. T. Radhakrishnan', 'Auditor display name must match');
   assert(auditorRecord.user.permissions.includes('qa:inspect'), 'Auditor has explicit qa:inspect permission');
+  assert(auditorRecord.user.permissions.includes('qa:review'), 'Auditor has explicit qa:review permission');
+  assert(auditorRecord.user.permissions.includes('qa:test'), 'Auditor has explicit qa:test permission');
 
   const auditorUser = auditorRecord.user;
   assert(hasPermission(auditorUser, 'qa:inspect') === true, 'hasPermission returns true for qa:inspect');
+  assert(hasPermission(auditorUser, 'qa:review') === true, 'hasPermission returns true for qa:review');
+  assert(hasPermission(auditorUser, 'qa:test') === true, 'hasPermission returns true for qa:test');
   assert(hasPermission(auditorUser, 'monitoring:view') === true, 'Auditor has monitoring:view');
   assert(hasPermission(auditorUser, 'monitoring:audit') === true, 'Auditor has monitoring:audit');
   assert(hasPermission(auditorUser, 'platform:admin') === false, 'Auditor must NOT have platform:admin');

@@ -22,7 +22,9 @@ export type Permission =
   | 'monitoring:audit'
   | 'budget:manage'
   | 'users:manage'
-  | 'qa:inspect';
+  | 'qa:inspect'
+  | 'qa:review'
+  | 'qa:test';
 
 export interface User {
   id: string;

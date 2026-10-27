@@ -57,8 +57,9 @@ export const FieldStaffTasksPage: React.FC = () => {
 
   // Strict Field Staff Filter:
   // Must belong to staff member's assigned ward AND be assigned to them!
+  // Super Admin & Governance Auditor (QA Inspection) have visibility to review tasks
   const assignedTasks = tasks.filter((t) => {
-    if (currentUser?.role === 'super_admin') return true;
+    if (currentUser?.role === 'super_admin' || currentUser?.role === 'governance_auditor') return true;
     if (staffWardId !== null && t.wardId !== staffWardId) return false;
     const isAssigned =
       (t.assignedFieldStaffId && t.assignedFieldStaffId === currentUser?.id) ||

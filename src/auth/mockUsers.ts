@@ -426,6 +426,8 @@ export const DEMO_USERS: Record<string, DemoUserRecord> = {
         'monitoring:view',
         'monitoring:audit',
         'qa:inspect',
+        'qa:review',
+        'qa:test',
       ],
       isActive: true,
       avatarInitials: 'GA',
