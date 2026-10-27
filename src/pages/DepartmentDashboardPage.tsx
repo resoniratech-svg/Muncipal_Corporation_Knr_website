@@ -136,8 +136,8 @@ export const DepartmentDashboardPage: React.FC = () => {
   // 2. Active Category Tab State (per hand-drawn layout)
   const [activeCategoryKey, setActiveCategoryKey] = useState<string>('drainage');
 
-  // 3. Status Filter State (per hand-drawn layout)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'In Progress' | 'Completed' | 'Resolved' | 'Overdue'>('all');
+  // 3. Status Filter State (per hand-drawn layout; completed unified under resolved)
+  const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'In Progress' | 'Resolved' | 'Overdue'>('all');
 
   // 4. Search and Sort State
   const [searchQuery, setSearchQuery] = useState('');
@@ -274,6 +274,8 @@ export const DepartmentDashboardPage: React.FC = () => {
         if (statusFilter !== 'all') {
           if (statusFilter === 'Overdue') {
             if (g.status !== 'Overdue') return false;
+          } else if (statusFilter === 'Resolved') {
+            if (g.status !== 'Resolved' && g.status !== 'Completed') return false;
           } else if (g.status !== statusFilter) {
             return false;
           }
@@ -475,14 +477,13 @@ export const DepartmentDashboardPage: React.FC = () => {
               <option value="all">{t('All Statuses')}</option>
               <option value="Pending">{t('Pending Assignment')}</option>
               <option value="In Progress">{t('Assigned / In Progress')}</option>
-              <option value="Completed">{t('Completed (Awaiting Verification)')}</option>
               <option value="Resolved">{t('Resolved / Closed')}</option>
               <option value="Overdue">{t('Overdue SLA')}</option>
             </select>
 
             {/* Quick status pills for fast access */}
             <div className="hidden lg:flex items-center gap-1 ml-2 border-l border-slate-200 pl-2">
-              {(['all', 'Pending', 'In Progress', 'Completed', 'Resolved'] as const).map((st) => (
+              {(['all', 'Pending', 'In Progress', 'Resolved'] as const).map((st) => (
                 <button
                   key={st}
                   type="button"
@@ -550,7 +551,7 @@ export const DepartmentDashboardPage: React.FC = () => {
                 {t(activeCategoryMeta.name)}
               </span>
               <span className="text-[11px] text-slate-500">
-                • {selectedWard === 'all' ? t('All Wards') : `Ward ${selectedWard}`} • {t('SLA: {{hours}}h', { hours: activeCategoryMeta.defaultSla })}
+                • {selectedWard === 'all' ? t('All Wards') : `Ward ${selectedWard}`} • SLA: {activeCategoryMeta.defaultSla}h
               </span>
             </div>
             <span className="text-xs font-mono font-bold text-slate-600">
