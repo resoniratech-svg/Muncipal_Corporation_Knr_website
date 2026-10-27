@@ -195,7 +195,7 @@ async function runTest() {
   console.log('\n5. Photo Workflow Tests Open Link Mapping...');
   const EXPECTED_TESTS = [
     { n: 1, route: '/citizen/report' },
-    { n: 2, route: '/leadership' },
+    { n: 2, route: '/qa/grievances/GRV-2024-27-0045' },
     { n: 3, route: '/field-tasks' },
     { n: 4, route: '/qa/grievances/GRV-2024-27-0045' },
     { n: 5, route: '/leadership' },
@@ -203,7 +203,7 @@ async function runTest() {
     { n: 7, route: '/citizen/report' },
     { n: 8, route: '/citizen' },
     { n: 9, route: '/' },
-    { n: 10, route: '/citizen' },
+    { n: 10, route: '/qa/grievances/GRV-2024-27-0045' },
   ];
 
   for (const t of EXPECTED_TESTS) {

@@ -137,7 +137,7 @@ export const DECK_SLIDES: DeckSlide[] = [
       { label: "Expenditure Overview", value: "75%", sub: "₹125 Cr of ₹166 Cr (approx.)" },
       { label: "02 Grievance #GRV2024/001245", value: "In Progress", sub: "Water leakage on Road, Booth Colony – Ward 12" },
     ],
-    targetRoute: "/",
+    targetRoute: "/qa/grievances/GRV-2024-27-0045",
     fullTranscription: `02 Real-Time Grievance Redressal Tracking: Grievance Details #GRV2024/001245, In Progress. Raised on 16 May 2024, 10:30 AM. Status Timeline: Complaint Registered (16 May 2024, 11:15 AM), In Progress (16 May 2024, 11:15 AM), Assigned to Officer (16 May 2024), Resolved.`,
   },
   {
@@ -873,7 +873,7 @@ export const DECK_SLIDES: DeckSlide[] = [
         items: [{ title: "Faster Resolution" }, { title: "Transparent Process" }, { title: "Greater Trust" }, { title: "Higher Satisfaction" }, { title: "Better Governance" }],
       },
     ],
-    targetRoute: "/citizen",
+    targetRoute: "/qa/grievances/GRV-2024-27-0045",
     fullTranscription: `Phone: My Complaint #CMP123456 — Acknowledged 10:15 AM, Routed to Department 10:20 AM, In Progress 11:30 AM, Work Completed 02:45 PM, Resolved 03:00 PM. Rate Your Experience (5 stars), SUBMIT.`,
   },
   {

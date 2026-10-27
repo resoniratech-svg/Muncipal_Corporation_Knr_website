@@ -77,7 +77,18 @@ export const QaInspectionBanner: React.FC = () => {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+        <div className="flex items-center gap-2 shrink-0 self-end md:self-auto flex-wrap">
+          {!location.pathname.startsWith('/qa/grievances') && (
+            <button
+              type="button"
+              onClick={() => navigate('/qa/grievances/GRV-2024-27-0045?qaInspect=true')}
+              className="px-3 py-1.5 min-h-[36px] bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/50 font-bold text-xs uppercase rounded-lg shadow transition flex items-center gap-1.5 active:scale-95"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
+              <span>{t("Audit Grievance")}</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleReturn}

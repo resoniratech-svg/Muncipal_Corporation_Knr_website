@@ -35,7 +35,7 @@ export const PHOTO_TESTS: PhotoTest[] = [
     n: 2, 
     title: 'BEFORE photo appears in My Requests, the Ward dashboard and the Leadership view', 
     how: 'Check the new complaint in Track My Complaint, Ward → New Complaints, Leadership → Recent Complaints (opens the viewer)', 
-    route: '/leadership', 
+    route: '/qa/grievances/GRV-2024-27-0045', 
     result: 'PASS', 
     evidence: 'The compressed JPEG loads in all three places.' 
   },
@@ -99,7 +99,7 @@ export const PHOTO_TESTS: PhotoTest[] = [
     n: 10, 
     title: 'A first-time person can complete report → track → rate without help', 
     how: 'Walkthrough below (not an automated test)', 
-    route: '/citizen', 
+    route: '/qa/grievances/GRV-2024-27-0045', 
     result: 'MANUAL', 
     evidence: 'Home → big "Report a Problem" → tap a picture tile → "Take Photo" → "Use my current location" → check → "Send Complaint" → "Track this complaint" → after the fix, "Yes, Problem Solved" → tap stars → "Send Rating". Every screen has one highlighted main button, Back, Home and Help. Needs confirming with a real first-time user.' 
   },
@@ -171,10 +171,35 @@ export const PhotoWorkflowChecklist: React.FC = () => {
         </div>
       </div>
 
+      {/* Direct Audit Shortcut Banner for Quick Inspection */}
+      <div className="mt-3 p-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border border-amber-500 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <span className="text-[10px] font-mono font-bold uppercase bg-slate-950 text-amber-300 px-2 py-0.5 rounded inline-block mb-1">
+            {t("Direct Audit Navigation")}
+          </span>
+          <h3 className="text-sm font-bold font-heading uppercase text-slate-950">
+            {t("Inspect Resolved Grievance GRV-2024-27-0045 Audit View")}
+          </h3>
+          <p className="text-xs text-slate-900 mt-0.5">
+            {t("Full read-only audit view: before & after photos, slider, staff assignment, ground timestamps, corporator verification & SLA compliance.")}
+          </p>
+        </div>
+
+        <Link
+          to="/qa/grievances/GRV-2024-27-0045?qaInspect=true"
+          state={{ qaInspect: true, fromQa: true }}
+          className="px-4 py-2 bg-slate-950 hover:bg-slate-900 text-amber-300 font-bold text-xs uppercase rounded-lg shadow transition flex items-center justify-center gap-1.5 shrink-0"
+        >
+          <span>{t("Open Grievance Audit")}</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
       <ol className="mt-4 space-y-3">
         {PHOTO_TESTS.map((test) => {
           const checkedState = isChecked(test.n);
           const meta = getReviewMeta(test.n);
+          const isGrievanceAuditRoute = test.route.includes('/qa/grievances');
 
           return (
             <li 
@@ -216,10 +241,14 @@ export const PhotoWorkflowChecklist: React.FC = () => {
                 <Link
                   to={`${test.route}${test.route.includes('?') ? '&' : '?'}qaInspect=true`}
                   state={{ qaInspect: true, fromQa: true, testNumber: test.n }}
-                  className="min-h-[44px] px-3.5 rounded-lg border-2 border-slate-300 hover:border-kmc-navy hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5 text-slate-800 transition active:scale-95 shadow-sm"
+                  className={`min-h-[44px] px-3.5 rounded-lg border-2 text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-sm ${
+                    isGrievanceAuditRoute
+                      ? 'bg-amber-400 text-slate-950 border-amber-500 hover:bg-amber-300'
+                      : 'bg-white border-slate-300 hover:border-kmc-navy hover:bg-slate-50 text-slate-800'
+                  }`}
                 >
-                  <span>{t("Open")}</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-kmc-navy" aria-hidden="true" />
+                  <span>{isGrievanceAuditRoute ? t("Audit Grievance") : t("Open")}</span>
+                  <ExternalLink className={`w-3.5 h-3.5 ${isGrievanceAuditRoute ? 'text-slate-950' : 'text-kmc-navy'}`} aria-hidden="true" />
                 </Link>
 
                 <label className="flex items-center gap-2 text-xs font-semibold min-h-[44px] cursor-pointer select-none bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition">
