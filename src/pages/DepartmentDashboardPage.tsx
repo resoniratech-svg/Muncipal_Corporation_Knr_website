@@ -1,9 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BannerStrip } from '../components/common/BannerStrip';
 import { FooterStrip } from '../components/common/FooterStrip';
-import { KpiCard } from '../components/common/KpiCard';
 import { StatusChip } from '../components/common/StatusChip';
-import { DonutChart } from '../components/charts/DonutChart';
 import { PhotoThumbnail } from '../components/common/EvidencePhotoModal';
 import { FullImageModal } from '../components/common/FullImagePreview';
 import { useApp } from '../context/AppContext';
@@ -19,7 +17,7 @@ import { userRepository, staffCategoryRepository } from '../storage';
 import { usePrefs } from '../i18n';
 import { GrievanceItem } from '../data/grievances';
 
-interface CategoryMeta {
+export interface CategoryMeta {
   key: string;
   name: string;
   department: string;
@@ -31,10 +29,10 @@ interface CategoryMeta {
   defaultSla: number;
 }
 
-const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
+export const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   drainage: {
     key: 'drainage',
-    name: 'Drainage & Stormwater Culverts',
+    name: 'Drainage',
     department: 'Engineering',
     icon: Waves,
     color: 'text-cyan-700',
@@ -45,7 +43,7 @@ const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   },
   roads: {
     key: 'roads',
-    name: 'Roads & Surface Maintenance',
+    name: 'Roads',
     department: 'Engineering',
     icon: Construction,
     color: 'text-amber-700',
@@ -56,7 +54,7 @@ const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   },
   civil: {
     key: 'civil',
-    name: 'Civil Works & Public Infrastructure',
+    name: 'Civil',
     department: 'Engineering',
     icon: Building,
     color: 'text-indigo-700',
@@ -67,7 +65,7 @@ const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   },
   'street-lights': {
     key: 'street-lights',
-    name: 'Street Lighting & Electrical Systems',
+    name: 'Street Lights',
     department: 'Electrical',
     icon: Lightbulb,
     color: 'text-yellow-700',
@@ -78,7 +76,7 @@ const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   },
   'water-supply': {
     key: 'water-supply',
-    name: 'Drinking Water & Pipeline Distribution',
+    name: 'Water Supply',
     department: 'Water Supply',
     icon: Droplet,
     color: 'text-sky-700',
@@ -89,7 +87,7 @@ const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   },
   sanitation: {
     key: 'sanitation',
-    name: 'Sanitation & Solid Waste Management',
+    name: 'Sanitation',
     department: 'Sanitation',
     icon: Trash2,
     color: 'text-emerald-700',
@@ -100,7 +98,7 @@ const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   },
 };
 
-function resolveCategoryKey(g: GrievanceItem): string {
+export function resolveCategoryKey(g: GrievanceItem): string {
   const c = (g.category || '').toLowerCase();
   const d = (g.description || '').toLowerCase();
   if (c.includes('drain') || d.includes('drain')) return 'drainage';
@@ -135,18 +133,20 @@ export const DepartmentDashboardPage: React.FC = () => {
     } catch {}
   };
 
-  // 2. Search, Status, and Sort State
+  // 2. Active Category Tab State (per hand-drawn layout)
+  const [activeCategoryKey, setActiveCategoryKey] = useState<string>('drainage');
+
+  // 3. Status Filter State (per hand-drawn layout)
+  const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'In Progress' | 'Completed' | 'Resolved' | 'Overdue'>('all');
+
+  // 4. Search and Sort State
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'In Progress' | 'Completed' | 'Resolved'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'sla'>('newest');
 
-  // 3. Collapsible categories state (all open by default for rapid overview)
-  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
-  const toggleCategory = (key: string) => {
-    setCollapsedCategories(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+  // 5. Collapsible task section state
+  const [showDispatchedTasks, setShowDispatchedTasks] = useState(false);
 
-  // 4. Modal and preview state
+  // 6. Modal and preview state
   const [selectedGrievanceId, setSelectedGrievanceId] = useState<string | null>(null);
   const [assigneeName, setAssigneeName] = useState('');
   const [targetDueDate, setTargetDueDate] = useState('Next 48 Hours');
@@ -209,16 +209,74 @@ export const DepartmentDashboardPage: React.FC = () => {
     return wards.find(w => w.id === parseInt(selectedWard, 10)) || null;
   }, [wards, selectedWard]);
 
-  // Filter and sort grievances within the selected ward
-  const processedGrievances = useMemo(() => {
+  // Counts for the current ward
+  const totalCount = wardFilteredGrievances.length;
+  const pendingCount = wardFilteredGrievances.filter(g => g.status === 'Pending').length;
+
+  // Category list and counts in current ward
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    wardFilteredGrievances.forEach(g => {
+      const k = resolveCategoryKey(g);
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    return counts;
+  }, [wardFilteredGrievances]);
+
+  const availableCategories = useMemo(() => {
+    const base = [
+      { key: 'drainage', label: 'Drainage', icon: Waves },
+      { key: 'roads', label: 'Roads', icon: Construction },
+      { key: 'civil', label: 'Civil', icon: Building },
+      { key: 'street-lights', label: 'Street Lights', icon: Lightbulb },
+      { key: 'water-supply', label: 'Water Supply', icon: Droplet },
+      { key: 'sanitation', label: 'Sanitation', icon: Trash2 },
+    ];
+
+    const extraKeys = new Set<string>();
+    wardFilteredGrievances.forEach(g => {
+      const k = resolveCategoryKey(g);
+      if (!base.some(b => b.key === k)) {
+        extraKeys.add(k);
+      }
+    });
+
+    const extras = Array.from(extraKeys).map(k => ({
+      key: k,
+      label: CATEGORY_DEFINITIONS[k]?.name || k.toUpperCase(),
+      icon: CATEGORY_DEFINITIONS[k]?.icon || Wrench,
+    }));
+
+    return [...base, ...extras];
+  }, [wardFilteredGrievances]);
+
+  // Active category metadata
+  const activeCategoryMeta = useMemo(() => {
+    return CATEGORY_DEFINITIONS[activeCategoryKey] || {
+      key: activeCategoryKey,
+      name: activeCategoryKey.toUpperCase(),
+      department: 'Engineering',
+      icon: Wrench,
+      color: 'text-slate-700',
+      borderAccent: 'border-l-slate-600',
+      badgeBg: 'bg-slate-50 border-slate-200',
+      badgeText: 'text-slate-900',
+      defaultSla: 72,
+    };
+  }, [activeCategoryKey]);
+
+  // Grievances filtered strictly by: (Selected Ward) AND (Selected Category Tab) AND (Selected Status) AND (Search)
+  const filteredCategoryGrievances = useMemo(() => {
     return wardFilteredGrievances
+      .filter(g => resolveCategoryKey(g) === activeCategoryKey)
       .filter(g => {
         // Status filter
         if (statusFilter !== 'all') {
-          if (statusFilter === 'Completed' && g.status !== 'Completed') return false;
-          if (statusFilter === 'Resolved' && g.status !== 'Resolved') return false;
-          if (statusFilter === 'Pending' && g.status !== 'Pending') return false;
-          if (statusFilter === 'In Progress' && g.status !== 'In Progress') return false;
+          if (statusFilter === 'Overdue') {
+            if (g.status !== 'Overdue') return false;
+          } else if (g.status !== statusFilter) {
+            return false;
+          }
         }
         // Search query
         if (searchQuery.trim()) {
@@ -238,74 +296,9 @@ export const DepartmentDashboardPage: React.FC = () => {
         if (sortBy === 'oldest') {
           return a.id.localeCompare(b.id);
         }
-        // newest
         return b.id.localeCompare(a.id);
       });
-  }, [wardFilteredGrievances, statusFilter, searchQuery, sortBy]);
-
-  // Metric counts for the selected ward
-  const totalCount = wardFilteredGrievances.length;
-  const pendingCount = wardFilteredGrievances.filter(g => g.status === 'Pending').length;
-  const inProgressCount = wardFilteredGrievances.filter(g => g.status === 'In Progress').length;
-  const completedCount = wardFilteredGrievances.filter(g => g.status === 'Completed' || g.status === 'Resolved').length;
-  const overdueCount = wardFilteredGrievances.filter(g => g.status === 'Overdue').length;
-
-  const donutData = useMemo(() => [
-    { name: t('Pending'), value: pendingCount, color: '#F57C00' },
-    { name: t('In Progress'), value: inProgressCount, color: '#0288D1' },
-    { name: t('Resolved/Closed'), value: completedCount, color: '#2E7D32' },
-  ], [pendingCount, inProgressCount, completedCount, t]);
-
-  // Group grievances by Category!
-  const categoryGroups = useMemo(() => {
-    // Primary department categories
-    const baseKeys = ['drainage', 'roads', 'civil'];
-    
-    // Also discover any additional categories present in the current grievance set
-    const presentKeys = new Set<string>(baseKeys);
-    wardFilteredGrievances.forEach(g => {
-      presentKeys.add(resolveCategoryKey(g));
-    });
-
-    const groups = Array.from(presentKeys).map(key => {
-      const meta = CATEGORY_DEFINITIONS[key] || {
-        key,
-        name: key.toUpperCase(),
-        department: 'Engineering',
-        icon: Wrench,
-        color: 'text-slate-700',
-        borderAccent: 'border-l-slate-600',
-        badgeBg: 'bg-slate-50 border-slate-200',
-        badgeText: 'text-slate-900',
-        defaultSla: 72,
-      };
-
-      // All grievances for this category in the selected ward
-      const allCategoryGrievances = wardFilteredGrievances.filter(g => resolveCategoryKey(g) === key);
-      
-      // Grievances matching current search & status filters
-      const filteredCategoryGrievances = processedGrievances.filter(g => resolveCategoryKey(g) === key);
-
-      const catPending = allCategoryGrievances.filter(g => g.status === 'Pending').length;
-      const catInProgress = allCategoryGrievances.filter(g => g.status === 'In Progress').length;
-      const catResolved = allCategoryGrievances.filter(g => g.status === 'Completed' || g.status === 'Resolved').length;
-      const catOverdue = allCategoryGrievances.filter(g => g.status === 'Overdue').length;
-
-      return {
-        meta,
-        allGrievances: allCategoryGrievances,
-        grievances: filteredCategoryGrievances,
-        total: allCategoryGrievances.length,
-        pending: catPending,
-        inProgress: catInProgress,
-        resolved: catResolved,
-        overdue: catOverdue,
-      };
-    });
-
-    // Sort groups so categories with grievances appear first
-    return groups.sort((a, b) => b.total - a.total);
-  }, [wardFilteredGrievances, processedGrievances]);
+  }, [wardFilteredGrievances, activeCategoryKey, statusFilter, searchQuery, sortBy]);
 
   // Modal Handlers
   const handleOpenAssignModal = (gid: string) => {
@@ -353,6 +346,7 @@ export const DepartmentDashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-kmc-bg">
+      {/* A. Existing Application Header */}
       <BannerStrip
         title={`${t('Department Officer Portal')} • ${t(userDept)}`}
         tagline="Ward-Specific Grievance Redressal, Category Grouping & Ground Staff Dispatch"
@@ -363,7 +357,7 @@ export const DepartmentDashboardPage: React.FC = () => {
         }
       />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4 w-full">
         
         {/* Toast Notification */}
         {toastMessage && (
@@ -373,492 +367,391 @@ export const DepartmentDashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* PROMINENT WARD SELECTOR COMMAND BAR */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-4 sm:p-5 border-l-4 border-l-kmc-navy">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                <span className="text-xs font-bold font-mono uppercase bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded flex items-center gap-1.5 border border-slate-200">
-                  <MapPin className="w-3.5 h-3.5 text-kmc-navy" />
-                  {t('Operational Ward Selection')}
-                </span>
-                <span className="text-xs text-slate-500 font-medium">
+        {/* B. Ward Selector (Prominent at top per reference sketch) */}
+        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-4 border-l-4 border-l-kmc-navy">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex-1 max-w-2xl">
+              <label htmlFor="dept-ward-select" className="block text-xs font-bold text-slate-800 uppercase mb-1.5 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-kmc-navy" />
+                <span>{t('Select Ward')}:</span>
+              </label>
+              <SearchableSelect
+                value={selectedWard}
+                onChange={handleWardChange}
+                searchPlaceholder={t('Search ward number or colony name...')}
+                options={wardOptions}
+                fullWidth
+                size="md"
+              />
+            </div>
+
+            {/* Compact Ward Status Badge */}
+            <div className="flex items-center gap-3 text-xs bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-lg self-start sm:self-auto shrink-0">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-500 block">{t('Ward Status')}</span>
+                <span className="font-bold text-slate-800">
                   {selectedWard === 'all'
-                    ? t('Displaying grievances across all 66 municipal wards')
-                    : t('Filtering grievances strictly for {{ward}}', {
-                        ward: activeWardObj ? `Ward ${activeWardObj.id} (${activeWardObj.name})` : `Ward ${selectedWard}`
-                      })}
+                    ? t('All 66 Wards')
+                    : activeWardObj
+                      ? `Ward ${activeWardObj.id} (${activeWardObj.name})`
+                      : `Ward ${selectedWard}`}
                 </span>
               </div>
-
-              <div className="max-w-xl">
-                <label htmlFor="dept-ward-select" className="block text-xs font-bold text-slate-800 uppercase mb-1">
-                  {t('Select Ward')}:
-                </label>
-                <SearchableSelect
-                  value={selectedWard}
-                  onChange={handleWardChange}
-                  searchPlaceholder={t('Search ward number or colony name...')}
-                  options={wardOptions}
-                  fullWidth
-                  size="md"
-                />
+              <div className="h-6 w-px bg-slate-200" />
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-500 block">{t('Total')}</span>
+                <span className="font-bold font-mono text-kmc-navy text-sm">{totalCount}</span>
               </div>
-            </div>
-
-            {/* Quick status counters for selected scope */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 shrink-0 flex items-center gap-4 text-xs">
-              <div className="text-center px-2">
-                <span className="block text-[10px] uppercase font-bold text-slate-500">{t('Total')}</span>
-                <span className="text-lg font-bold font-mono text-slate-900">{totalCount}</span>
-              </div>
-              <div className="h-8 w-px bg-slate-200" />
-              <div className="text-center px-2">
-                <span className="block text-[10px] uppercase font-bold text-amber-700">{t('Pending')}</span>
-                <span className="text-lg font-bold font-mono text-amber-800">{pendingCount}</span>
-              </div>
-              <div className="h-8 w-px bg-slate-200" />
-              <div className="text-center px-2">
-                <span className="block text-[10px] uppercase font-bold text-blue-700">{t('Active')}</span>
-                <span className="text-lg font-bold font-mono text-blue-800">{inProgressCount}</span>
-              </div>
-              <div className="h-8 w-px bg-slate-200" />
-              <div className="text-center px-2">
-                <span className="block text-[10px] uppercase font-bold text-emerald-700">{t('Resolved')}</span>
-                <span className="text-lg font-bold font-mono text-emerald-800">{completedCount}</span>
+              <div className="h-6 w-px bg-slate-200" />
+              <div>
+                <span className="text-[10px] uppercase font-bold text-amber-700 block">{t('Pending')}</span>
+                <span className="font-bold font-mono text-amber-800 text-sm">{pendingCount}</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Officer Welcome & Department Scope Console */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-l-orange-500">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold font-mono bg-orange-100 text-orange-900 px-2 py-0.5 rounded">
-                {t('Operational Wing')}: {t('Engineering')}
-              </span>
-              <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
-                {t('SLA Compliance: 85% On-Time')}
-              </span>
-              {activeWardObj && (
-                <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-0.5 rounded">
-                  {t('Elected Corporator')}: {activeWardObj.corporator}
-                </span>
-              )}
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold font-heading uppercase text-slate-900 mt-1">
-              {officerName} – {t('Department Command Console')}
-            </h2>
-            <p className="text-xs text-slate-500">
-              {selectedWard === 'all'
-                ? t('Managing city-wide Engineering grievances across all 66 Wards.')
-                : t('Managing Engineering grievances for Ward {{ward}} ({{name}}).', {
-                    ward: selectedWard,
-                    name: activeWardObj?.name || 'Local Ward'
-                  })}
-            </p>
-          </div>
-
-          <div className="text-right shrink-0">
-            <span className="text-[11px] text-slate-500 uppercase font-bold">{t('Standard SLA')}</span>
-            <p className="text-lg font-bold font-heading text-orange-700">{t('72 Hours Max')}</p>
-          </div>
-        </section>
-
-        {/* 4 Ward-Specific KPI Cards */}
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <KpiCard
-            label={selectedWard === 'all' ? t('Total City Grievances') : t('Ward {{id}} Grievances', { id: selectedWard })}
-            value={totalCount}
-            sublabel={t('Engineering Scope')}
-            icon={<Building className="w-5 h-5 text-orange-700" />}
-            highlightColor="border-l-orange-500"
-          />
-          <KpiCard
-            label={t('Pending Assignment')}
-            value={pendingCount}
-            sublabel={t('Awaiting Field Staff')}
-            icon={<Clock className="w-5 h-5 text-amber-500" />}
-            highlightColor="border-l-amber-500"
-          />
-          <KpiCard
-            label={t('Under Execution')}
-            value={inProgressCount}
-            sublabel={t('Ground Teams Deployed')}
-            icon={<Wrench className="w-5 h-5 text-blue-600" />}
-            highlightColor="border-l-blue-600"
-          />
-          <KpiCard
-            label={t('Resolved & Closed')}
-            value={completedCount}
-            sublabel={t('Photo Proof Verified')}
-            icon={<CheckCircle2 className="w-5 h-5 text-emerald-700" />}
-            highlightColor="border-l-emerald-600"
-          />
-        </section>
-
-        {/* SEARCH, STATUS FILTER AND SORT BAR */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-4 flex flex-col md:flex-row items-center justify-between gap-3">
-          {/* Search box */}
-          <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('Search by ID, keyword, street...')}
-              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-kmc-navy/30"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Status Filter Buttons */}
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-            {(['all', 'Pending', 'In Progress', 'Completed', 'Resolved'] as const).map((st) => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
-                  statusFilter === st
-                    ? 'bg-kmc-navy text-white shadow'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {st === 'all' ? t('All Statuses') : t(st)}
-              </button>
-            ))}
-          </div>
-
-          {/* Sort By */}
-          <div className="flex items-center gap-2 shrink-0 self-end md:self-auto text-xs">
-            <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
-            <span className="text-slate-500 font-semibold">{t('Sort')}:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 font-medium"
-            >
-              <option value="newest">{t('Newest First')}</option>
-              <option value="oldest">{t('Oldest First')}</option>
-              <option value="sla">{t('SLA Target (Urgent)')}</option>
-            </select>
-          </div>
-        </section>
-
-        {/* CATEGORY-WISE GRIEVANCE GROUPING SECTIONS */}
-        <div className="space-y-5">
-          <div className="flex items-center justify-between pb-1">
-            <h3 className="text-sm font-bold font-heading uppercase text-slate-900 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-kmc-navy" />
-              <span>{t('Category-Wise Grievance Redressal')}</span>
-              {selectedWard !== 'all' && (
-                <span className="text-xs font-normal text-slate-600">
-                  ({t('Ward {{ward}}', { ward: selectedWard })})
-                </span>
-              )}
-            </h3>
-
-            <div className="text-xs text-slate-500">
-              <span>{processedGrievances.length} {t('records shown across {{count}} categories', { count: categoryGroups.length })}</span>
-            </div>
-          </div>
-
-          {/* Render Each Category Group */}
-          {categoryGroups.map((group) => {
-            const isCollapsed = !!collapsedCategories[group.meta.key];
-            const IconComponent = group.meta.icon;
-
-            return (
-              <section
-                key={group.meta.key}
-                className={`bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden transition-all border-l-4 ${group.meta.borderAccent}`}
-              >
-                {/* Category Group Header Card */}
-                <div
-                  onClick={() => toggleCategory(group.meta.key)}
-                  className="p-4 sm:p-4.5 bg-slate-50/70 hover:bg-slate-100/70 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 transition"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shadow-sm ${group.meta.badgeBg}`}>
-                      <IconComponent className={`w-5 h-5 ${group.meta.color}`} />
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-bold font-heading uppercase text-slate-900 flex items-center gap-2">
-                        {t(group.meta.name)}
-                      </h4>
-                      <p className="text-[11px] text-slate-500">
-                        {t('Operational Wing')}: {t(group.meta.department)} • {t('SLA: {{hours}}h Target', { hours: group.meta.defaultSla })}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Summary Metric Badges & Accordion Toggle */}
-                  <div className="flex items-center gap-2.5 flex-wrap self-end sm:self-auto">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-200 text-slate-800">
-                      {group.total} {t('Total')}
-                    </span>
-
-                    {group.pending > 0 && (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                        {group.pending} {t('Pending')}
-                      </span>
-                    )}
-
-                    {group.inProgress > 0 && (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-100 text-blue-900 border border-blue-200">
-                        {group.inProgress} {t('Active')}
-                      </span>
-                    )}
-
-                    {group.resolved > 0 && (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">
-                        {group.resolved} {t('Resolved')}
-                      </span>
-                    )}
-
-                    <div className="text-slate-400 p-1">
-                      {isCollapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Category Grievance Table / List */}
-                {!isCollapsed && (
-                  <div className="p-4 sm:p-5">
-                    {group.grievances.length === 0 ? (
-                      <div className="py-6 px-4 text-center rounded-xl bg-slate-50/60 border border-dashed border-slate-200">
-                        <IconComponent className="w-8 h-8 text-slate-300 mx-auto mb-1.5" />
-                        <p className="text-xs font-semibold text-slate-600">
-                          {selectedWard === 'all'
-                            ? t('No active {{cat}} grievances matching filters.', { cat: t(group.meta.name) })
-                            : t('No active {{cat}} grievances reported in Ward {{ward}}.', { cat: t(group.meta.name), ward: selectedWard })}
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          {t('Any newly reported grievances in this category will be grouped here for staff dispatch.')}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200">
-                            <tr>
-                              <th className="py-2.5 px-3">{t('Grievance ID')}</th>
-                              <th className="py-2.5 px-3">{t('Issue Description')}</th>
-                              <th className="py-2.5 px-3">{t('Location & Ward')}</th>
-                              <th className="py-2.5 px-3">{t('Site Photo')}</th>
-                              <th className="py-2.5 px-3">{t('Reported On')}</th>
-                              <th className="py-2.5 px-3">{t('SLA Target')}</th>
-                              <th className="py-2.5 px-3">{t('Status')}</th>
-                              <th className="py-2.5 px-3">{t('Assigned Staff')}</th>
-                              <th className="py-2.5 px-3 text-right">{t('Action')}</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {group.grievances.map((g) => (
-                              <tr key={g.id} className="hover:bg-slate-50/80 transition-colors">
-                                <td className="py-3 px-3 font-mono font-bold text-kmc-navy whitespace-nowrap">
-                                  {g.id}
-                                </td>
-                                <td className="py-3 px-3 font-semibold text-slate-900 max-w-xs">
-                                  {t(g.description)}
-                                </td>
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  <div className="flex items-center gap-1.5 text-slate-700">
-                                    <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                                    <span>{t(g.location)}</span>
-                                  </div>
-                                  <span className="text-[10px] font-mono text-slate-500 font-bold block mt-0.5">
-                                    Ward {g.wardId}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  {g.beforePhoto ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => setPreviewPhoto({
-                                        src: g.beforePhoto!,
-                                        title: `${g.id}: ${g.category}`,
-                                        location: `${g.location} (Ward ${g.wardId})`,
-                                      })}
-                                      className="relative group block"
-                                      title={t('Click to inspect full photograph evidence')}
-                                    >
-                                      <PhotoThumbnail
-                                        src={g.beforePhoto}
-                                        alt={`Site Photo for ${g.id}`}
-                                        location={t(g.location)}
-                                        size="sm"
-                                      />
-                                      <span className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/40 rounded-lg flex items-center justify-center transition opacity-0 group-hover:opacity-100">
-                                        <Eye className="w-3.5 h-3.5 text-white" />
-                                      </span>
-                                    </button>
-                                  ) : (
-                                    <span className="text-[11px] text-slate-400 italic">{t('No photo')}</span>
-                                  )}
-                                </td>
-                                <td className="py-3 px-3 whitespace-nowrap text-slate-500 text-[11px]">
-                                  {g.reportedOn}
-                                </td>
-                                <td className="py-3 px-3 font-mono text-xs font-bold text-amber-800 whitespace-nowrap">
-                                  {g.slaHours || group.meta.defaultSla} {t('Hours')}
-                                </td>
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  <StatusChip status={g.status} size="sm" />
-                                </td>
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  {g.assignedTo ? (
-                                    <div className="flex items-center gap-1.5 text-slate-800">
-                                      <UserCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                      <span className="font-semibold text-xs">{g.assignedTo}</span>
-                                    </div>
-                                  ) : (
-                                    <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                                      {t('Awaiting Assignment')}
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="py-3 px-3 text-right whitespace-nowrap">
-                                  {g.status === 'Pending' ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleOpenAssignModal(g.id)}
-                                      className="px-3 py-1.5 min-h-[34px] bg-kmc-navy hover:bg-kmc-navy-light text-white font-bold text-xs rounded-lg flex items-center gap-1.5 ml-auto shadow-sm transition active:scale-95"
-                                    >
-                                      <UserPlus className="w-3.5 h-3.5" />
-                                      <span>{t('Assign Staff')}</span>
-                                    </button>
-                                  ) : g.status === 'Completed' ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleApproveGrievance(g.id)}
-                                      className="px-3 py-1.5 min-h-[34px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 ml-auto shadow-sm transition active:scale-95"
-                                    >
-                                      <Check className="w-3.5 h-3.5" />
-                                      <span>{t('Approve & Close')}</span>
-                                    </button>
-                                  ) : g.status === 'Resolved' ? (
-                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
-                                      <CheckCheck className="w-3 h-3 text-emerald-600" />
-                                      {t('Signed Off')}
-                                    </span>
-                                  ) : (
-                                    <span className="text-[11px] text-slate-500 font-mono">
-                                      {t('In Execution')}
-                                    </span>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </section>
-            );
-          })}
-        </div>
-
-        {/* Civic Asset Spotlight */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 flex flex-col md:flex-row items-center gap-5">
-          <div className="w-full md:w-56 h-36 rounded-xl overflow-hidden shrink-0 border border-slate-200 shadow-sm relative group bg-slate-950">
-            <img
-              src="images/civic-works/cable-bridge.jpg"
-              alt="Engineering Civic Works - Manair River Cable Bridge"
-              className="w-full h-full object-cover"
-            />
-            <span className="absolute top-2 left-2 bg-slate-950/80 text-white font-bold text-[11px] uppercase px-2 py-0.5 rounded backdrop-blur-sm pointer-events-none">
-              {t('Engineering Asset')}
+        {/* C. Category Tabs (Directly below Ward Selector per hand-drawn reference) */}
+        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-kmc-navy" />
+              <span>{t('Category Tabs')}</span>
+            </span>
+            <span className="text-[11px] text-slate-400">
+              {t('Click a tab to view that category')}
             </span>
           </div>
-          <div className="flex-1 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] uppercase font-bold text-kmc-navy bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                {t('Major Civic Infrastructure')}
-              </span>
-              <span className="text-xs font-bold text-slate-700">{t('Manair River Cable-Stayed Bridge & Arterial Approaches')}</span>
-            </div>
-            <h4 className="text-sm font-bold font-heading uppercase text-slate-900">
-              {t('Corridor Maintenance & Structural Redressal Program')}
-            </h4>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              {t('Supervising ongoing road surfacing, stormwater drains, culverts, and structural maintenance connecting Karimnagar across all municipal divisions.')}
-            </p>
-            <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-slate-500 font-mono">
-              <span>✓ {t('Inspection Status: Verified')}</span>
-              <span>•</span>
-              <span>{t('Field Teams: Deployed')}</span>
-              <span>•</span>
-              <span>{t('Executive Wing: Roads, Bridges & Culverts')}</span>
-            </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+            {availableCategories.map((cat) => {
+              const isActive = activeCategoryKey === cat.key;
+              const count = categoryCounts[cat.key] || 0;
+              const Icon = cat.icon;
+
+              return (
+                <button
+                  key={cat.key}
+                  type="button"
+                  onClick={() => setActiveCategoryKey(cat.key)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-all border ${
+                    isActive
+                      ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-sm ring-2 ring-amber-400/50 scale-[1.02]'
+                      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-slate-500'}`} />
+                  <span>{t(cat.label)}</span>
+                  <span
+                    className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      isActive
+                        ? 'bg-slate-950 text-amber-300'
+                        : count > 0
+                          ? 'bg-slate-200 text-slate-800'
+                          : 'bg-slate-100 text-slate-400'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
-        {/* Ward-Specific Dispatched Field Tasks */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5">
-          <div className="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-xs font-bold font-heading uppercase text-slate-800">
+        {/* D. Status Filter (Directly below Category Tabs per reference sketch) */}
+        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Status Dropdown */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-xs font-bold text-slate-700 uppercase flex items-center gap-1">
+              <Filter className="w-3.5 h-3.5 text-kmc-navy" />
+              <span>{t('Status')}:</span>
+            </span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-kmc-navy/30 cursor-pointer"
+            >
+              <option value="all">{t('All Statuses')}</option>
+              <option value="Pending">{t('Pending Assignment')}</option>
+              <option value="In Progress">{t('Assigned / In Progress')}</option>
+              <option value="Completed">{t('Completed (Awaiting Verification)')}</option>
+              <option value="Resolved">{t('Resolved / Closed')}</option>
+              <option value="Overdue">{t('Overdue SLA')}</option>
+            </select>
+
+            {/* Quick status pills for fast access */}
+            <div className="hidden lg:flex items-center gap-1 ml-2 border-l border-slate-200 pl-2">
+              {(['all', 'Pending', 'In Progress', 'Completed', 'Resolved'] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition ${
+                    statusFilter === st
+                      ? 'bg-kmc-navy text-white shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {st === 'all' ? t('All') : t(st)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Compact Search & Sort Controls */}
+          <div className="flex items-center gap-2">
+            <div className="relative w-full sm:w-56">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('Search ID, keyword...')}
+                className="w-full pl-8 pr-3 py-1 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-kmc-navy/30"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0 text-xs">
+              <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 font-medium"
+              >
+                <option value="newest">{t('Newest')}</option>
+                <option value="oldest">{t('Oldest')}</option>
+                <option value="sla">{t('SLA Target')}</option>
+              </select>
+            </div>
+
+            <span className="text-xs text-slate-500 font-medium pl-1 shrink-0">
+              {filteredCategoryGrievances.length} {t('records')}
+            </span>
+          </div>
+        </section>
+
+        {/* E. Filtered Grievance List (Clean compact table below status filter per sketch) */}
+        <section className="bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden">
+          {/* Active Category Header Bar */}
+          <div className="p-3.5 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <activeCategoryMeta.icon className={`w-4 h-4 ${activeCategoryMeta.color}`} />
+              <span className="font-bold text-xs font-heading uppercase text-slate-800">
+                {t(activeCategoryMeta.name)}
+              </span>
+              <span className="text-[11px] text-slate-500">
+                • {selectedWard === 'all' ? t('All Wards') : `Ward ${selectedWard}`} • {t('SLA: {{hours}}h', { hours: activeCategoryMeta.defaultSla })}
+              </span>
+            </div>
+            <span className="text-xs font-mono font-bold text-slate-600">
+              {filteredCategoryGrievances.length} {t('complaints shown')}
+            </span>
+          </div>
+
+          {filteredCategoryGrievances.length === 0 ? (
+            <div className="py-12 px-4 text-center rounded-b-xl bg-slate-50/40">
+              <activeCategoryMeta.icon className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+              <p className="text-xs font-bold text-slate-700">
+                {t('No grievances in {{cat}} matching current filters.', { cat: t(activeCategoryMeta.name) })}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">
                 {selectedWard === 'all'
-                  ? t('Field Staff Task Progress (City-Wide Execution)')
-                  : t('Field Staff Task Progress (Ward {{ward}} Execution)', { ward: selectedWard })}
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                {t('Monitor work dispatched to field technicians, desilting operators, and road crews')}
+                  ? t('No complaints currently match the selected status in this category across all wards.')
+                  : t('Ward {{ward}} has no active complaints under {{cat}} matching the selected criteria.', { ward: selectedWard, cat: t(activeCategoryMeta.name) })}
               </p>
             </div>
-            <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded">
-              {displayedTasks.length} {t('Dispatched Tasks')}
-            </span>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th className="py-2.5 px-3">{t('Grievance ID')}</th>
+                    <th className="py-2.5 px-3">{t('Issue Description')}</th>
+                    <th className="py-2.5 px-3">{t('Location & Ward')}</th>
+                    <th className="py-2.5 px-3">{t('Site Photo')}</th>
+                    <th className="py-2.5 px-3">{t('SLA Target')}</th>
+                    <th className="py-2.5 px-3">{t('Status')}</th>
+                    <th className="py-2.5 px-3">{t('Assigned Staff')}</th>
+                    <th className="py-2.5 px-3 text-right">{t('Action')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredCategoryGrievances.map((g) => (
+                    <tr key={g.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-3 font-mono font-bold text-kmc-navy whitespace-nowrap">
+                        {g.id}
+                      </td>
+                      <td className="py-3 px-3 font-semibold text-slate-900 max-w-xs">
+                        {t(g.description)}
+                        <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
+                          {t('Reported')}: {g.reportedOn}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 text-slate-700">
+                          <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <span>{t(g.location)}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-500 font-bold block mt-0.5">
+                          Ward {g.wardId}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {g.beforePhoto ? (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewPhoto({
+                              src: g.beforePhoto!,
+                              title: `${g.id}: ${g.category}`,
+                              location: `${g.location} (Ward ${g.wardId})`,
+                            })}
+                            className="relative group block"
+                            title={t('Click to inspect full photograph evidence')}
+                          >
+                            <PhotoThumbnail
+                              src={g.beforePhoto}
+                              alt={`Site Photo for ${g.id}`}
+                              location={t(g.location)}
+                              size="sm"
+                            />
+                            <span className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/40 rounded-lg flex items-center justify-center transition opacity-0 group-hover:opacity-100">
+                              <Eye className="w-3.5 h-3.5 text-white" />
+                            </span>
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-slate-400 italic">{t('No photo')}</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 font-mono text-xs font-bold text-amber-800 whitespace-nowrap">
+                        {g.slaHours || activeCategoryMeta.defaultSla} {t('Hours')}
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <StatusChip status={g.status} size="sm" />
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {g.assignedTo ? (
+                          <div className="flex items-center gap-1.5 text-slate-800">
+                            <UserCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                            <span className="font-semibold text-xs">{g.assignedTo}</span>
+                          </div>
+                        ) : (
+                          <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            {t('Awaiting Assignment')}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-right whitespace-nowrap">
+                        {g.status === 'Pending' ? (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAssignModal(g.id)}
+                            className="px-3 py-1.5 min-h-[34px] bg-kmc-navy hover:bg-kmc-navy-light text-white font-bold text-xs rounded-lg flex items-center gap-1.5 ml-auto shadow-sm transition active:scale-95"
+                          >
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span>{t('Assign Staff')}</span>
+                          </button>
+                        ) : g.status === 'Completed' ? (
+                          <button
+                            type="button"
+                            onClick={() => handleApproveGrievance(g.id)}
+                            className="px-3 py-1.5 min-h-[34px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 ml-auto shadow-sm transition active:scale-95"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>{t('Approve & Close')}</span>
+                          </button>
+                        ) : g.status === 'Resolved' ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
+                            <CheckCheck className="w-3 h-3 text-emerald-600" />
+                            {t('Signed Off')}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-slate-500 font-mono">
+                            {t('In Execution')}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* Compact Field Staff Task Progress (Collapsible at bottom) */}
+        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-4">
+          <div
+            onClick={() => setShowDispatchedTasks(!showDispatchedTasks)}
+            className="flex items-center justify-between cursor-pointer select-none"
+          >
+            <div className="flex items-center gap-2">
+              <Wrench className="w-4 h-4 text-kmc-navy" />
+              <h3 className="text-xs font-bold font-heading uppercase text-slate-800">
+                {selectedWard === 'all'
+                  ? t('Field Staff Dispatched Tasks (City-Wide)')
+                  : t('Field Staff Dispatched Tasks (Ward {{ward}})', { ward: selectedWard })}
+              </h3>
+              <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full ml-1">
+                {displayedTasks.length}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="text-slate-400 hover:text-slate-600 p-1 flex items-center gap-1 text-xs font-medium"
+            >
+              <span>{showDispatchedTasks ? t('Hide') : t('View')}</span>
+              {showDispatchedTasks ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
           </div>
 
-          {displayedTasks.length === 0 ? (
-            <div className="p-6 text-center text-xs text-slate-500 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-              {t('No active dispatched tasks in this scope.')}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {displayedTasks.map((task) => (
-                <div key={task.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] font-mono font-bold text-slate-500">{task.id}</span>
-                      <StatusChip status={task.status} size="sm" />
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-900 font-heading uppercase">
-                      {task.task}
-                    </h4>
-                    <p className="text-[11px] text-slate-600 mt-1">
-                      {t('Assigned')}: <strong>{task.assignedTo}</strong>
-                    </p>
-                    <p className="text-[11px] text-slate-500">
-                      {t('Due Date')}: {task.dueDate}
-                    </p>
-                  </div>
-
-                  <div className="mt-3 pt-2 border-t border-slate-200 flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500 font-bold">Ward {task.wardId}</span>
-                    {task.status !== 'Completed' ? (
-                      <span className="text-amber-800 font-bold">{t('Waiting for after photo')}</span>
-                    ) : (
-                      <span className="text-emerald-700 font-bold">✓ {t('Completed')}</span>
-                    )}
-                  </div>
+          {showDispatchedTasks && (
+            <div className="mt-3 pt-3 border-t border-slate-100">
+              {displayedTasks.length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-500 bg-slate-50 rounded-lg">
+                  {t('No active dispatched tasks in this scope.')}
                 </div>
-              ))}
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {displayedTasks.map((task) => (
+                    <div key={task.id} className="p-3 rounded-lg border border-slate-200 bg-slate-50/60 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-mono font-bold text-slate-500">{task.id}</span>
+                          <StatusChip status={task.status} size="sm" />
+                        </div>
+                        <h4 className="text-xs font-bold text-slate-900 font-heading uppercase">
+                          {task.task}
+                        </h4>
+                        <p className="text-[11px] text-slate-600 mt-1">
+                          {t('Assigned')}: <strong>{task.assignedTo}</strong>
+                        </p>
+                        <p className="text-[10px] text-slate-500">
+                          {t('Due Date')}: {task.dueDate}
+                        </p>
+                      </div>
+
+                      <div className="mt-2 pt-2 border-t border-slate-200 flex justify-between items-center text-[10px]">
+                        <span className="text-slate-500 font-bold">Ward {task.wardId}</span>
+                        {task.status !== 'Completed' ? (
+                          <span className="text-amber-800 font-bold">{t('Waiting for after photo')}</span>
+                        ) : (
+                          <span className="text-emerald-700 font-bold">✓ {t('Completed')}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </section>
