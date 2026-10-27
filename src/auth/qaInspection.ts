@@ -26,6 +26,7 @@ export const APPROVED_QA_ROUTES: string[] = [
   '/admin/users',
   '/present',
   '/qa',
+  '/qa/grievances',
 ];
 
 /**
@@ -51,6 +52,7 @@ export const QA_ROUTE_LABELS: Record<string, string> = {
   '/admin/users': 'User Management & Role Governance',
   '/present': 'Fullscreen Governance Deck',
   '/qa': 'Compliance QA Checklist',
+  '/qa/grievances': 'Grievance Audit Detail Screen',
 };
 
 /**
@@ -61,6 +63,7 @@ export function isApprovedQaRoute(pathname: string): boolean {
   const cleanPath = pathname.split('?')[0].replace(/\/+$/, '') || '/';
   if (APPROVED_QA_ROUTES.includes(cleanPath)) return true;
   if (cleanPath.startsWith('/citizen')) return true;
+  if (cleanPath.startsWith('/qa/grievances')) return true;
   return false;
 }
 
@@ -71,6 +74,7 @@ export function getQaRouteLabel(pathname: string): string {
   const cleanPath = pathname.split('?')[0].replace(/\/+$/, '') || '/';
   if (QA_ROUTE_LABELS[cleanPath]) return QA_ROUTE_LABELS[cleanPath];
   if (cleanPath.startsWith('/citizen/')) return 'Citizen Portal Module';
+  if (cleanPath.startsWith('/qa/grievances')) return 'Grievance Audit Detail Screen';
   return 'Application Screen';
 }
 

@@ -23,6 +23,7 @@ const ImplementationPage = lazy(() => import('./pages/ImplementationPage').then(
 const UserManagementPage = lazy(() => import('./pages/UserManagementPage').then(m => ({ default: m.UserManagementPage })));
 const PresentationPage = lazy(() => import('./pages/PresentationPage').then(m => ({ default: m.PresentationPage })));
 const QaAuditPage = lazy(() => import('./pages/QaAuditPage').then(m => ({ default: m.QaAuditPage })));
+const GrievanceAuditDetailPage = lazy(() => import('./pages/GrievanceAuditDetailPage').then(m => ({ default: m.GrievanceAuditDetailPage })));
 
 // Skeleton while a page's code loads (no spinner-only dead ends)
 const LoadingFallback = () => (
@@ -194,6 +195,20 @@ export const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['super_admin', 'governance_auditor']}>
                   <QaAuditPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Dedicated Grievance Audit Detail Screen for Governance Auditor & Super Admin */}
+            <Route
+              path="/qa/grievances"
+              element={<Navigate to="/qa/grievances/GRV-2024-27-0045" replace />}
+            />
+            <Route
+              path="/qa/grievances/:grievanceId"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'governance_auditor']}>
+                  <GrievanceAuditDetailPage />
                 </ProtectedRoute>
               }
             />

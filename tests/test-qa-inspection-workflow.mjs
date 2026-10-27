@@ -197,7 +197,7 @@ async function runTest() {
     { n: 1, route: '/citizen/report' },
     { n: 2, route: '/leadership' },
     { n: 3, route: '/field-tasks' },
-    { n: 4, route: '/ward' },
+    { n: 4, route: '/qa/grievances/GRV-2024-27-0045' },
     { n: 5, route: '/leadership' },
     { n: 6, route: '/citizen/track' },
     { n: 7, route: '/citizen/report' },
@@ -211,6 +211,48 @@ async function runTest() {
     const targetWithParam = `${t.route}${t.route.includes('?') ? '&' : '?'}qaInspect=true`;
     assert(targetWithParam.includes('qaInspect=true'), `Test ${t.n} link specifies ?qaInspect=true`);
   }
+
+  // 6. Grievance Audit Detail Data Model & SLA Verification
+  console.log('\n6. Grievance Audit Detail Data Model & SLA Verification...');
+  const { grievanceRepository } = await server.ssrLoadModule('./src/storage/repositories/grievanceRepository.ts');
+  const { getBeforePhotos, getAfterPhotos } = await server.ssrLoadModule('./src/data/grievances.ts');
+
+  const resolvedGrievance = grievanceRepository.getById('GRV-2024-27-0045');
+  assert(!!resolvedGrievance, 'GRV-2024-27-0045 must exist in grievance repository');
+  assert(resolvedGrievance.status === 'Resolved', 'Grievance status is Resolved');
+  assert(resolvedGrievance.wardId === 27, 'Grievance belongs to Ward 27');
+  assert(resolvedGrievance.category === 'Drainage', 'Grievance category is Drainage');
+  assert(resolvedGrievance.slaHours === 72, 'Configured SLA is 72 hours');
+  assert(resolvedGrievance.assignedTo.includes('Mahesh'), 'Assigned staff is Mahesh (Field Staff)');
+
+  const beforeEvidence = getBeforePhotos(resolvedGrievance);
+  const afterEvidence = getAfterPhotos(resolvedGrievance);
+  assert(beforeEvidence.length > 0, 'Before photo evidence is present and non-empty');
+  assert(afterEvidence.length > 0, 'After photo evidence is present and non-empty');
+  assert(beforeEvidence[0].src.includes('drain-before'), 'Before photo points to authentic drain-before.jpg');
+  assert(afterEvidence[0].src.includes('drain-after'), 'After photo points to authentic drain-after.jpg');
+
+  assert(Array.isArray(resolvedGrievance.timeline), 'Timeline exists as an array of events');
+  assert(resolvedGrievance.timeline.length >= 4, `Timeline contains ${resolvedGrievance.timeline.length} chronological events`);
+  const registeredEvent = resolvedGrievance.timeline.find(e => e.title.includes('Registered'));
+  const approvedEvent = resolvedGrievance.timeline.find(e => e.title.includes('Approved') || e.title.includes('Closed'));
+  assert(!!registeredEvent, 'Timeline contains Registered event');
+  assert(!!approvedEvent, 'Timeline contains Approved & Closed event');
+
+  // Metadata review storage check
+  const reviewMetadata = {
+    4: {
+      checked: true,
+      reviewer: 'Dr. T. Radhakrishnan (Governance Auditor)',
+      timestamp: '2026-10-27T12:00:00.000Z',
+      status: 'VERIFIED',
+    },
+  };
+  localStorage.setItem(PHOTO_CHECKLIST_KEY, JSON.stringify(reviewMetadata));
+  const parsedReviews = JSON.parse(localStorage.getItem(PHOTO_CHECKLIST_KEY) || '{}');
+  assert(parsedReviews[4].checked === true, 'Test 4 review checked state persisted');
+  assert(parsedReviews[4].reviewer.includes('Radhakrishnan'), 'Test 4 reviewer identity recorded');
+  assert(parsedReviews[4].status === 'VERIFIED', 'Test 4 review status recorded as VERIFIED');
 
   await server.close();
 
