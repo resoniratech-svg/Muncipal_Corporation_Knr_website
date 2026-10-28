@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useId } from 'react';
 import { Search, ChevronDown, Check, X } from 'lucide-react';
+import { usePrefs } from '../../i18n';
 
 export interface SelectOption {
   value: string | number;
@@ -36,8 +37,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   options,
   value,
   onChange,
-  placeholder = 'Select option...',
-  searchPlaceholder = 'Search...',
+  placeholder,
+  searchPlaceholder,
   disabled = false,
   id,
   name,
@@ -48,10 +49,15 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   allowFreeTextSearch = false,
   searchQuery,
   onSearchQueryChange,
-  emptyMessage = 'No matching options found',
+  emptyMessage,
   autoFocusSearch = true,
   align = 'left',
 }) => {
+  const { t } = usePrefs();
+  const effectivePlaceholder = placeholder !== undefined ? placeholder : t('Select option...');
+  const effectiveSearchPlaceholder = searchPlaceholder !== undefined ? searchPlaceholder : t('Search...');
+  const effectiveEmptyMessage = emptyMessage !== undefined ? emptyMessage : t('No matching options found');
+
   const generatedId = useId();
   const selectId = id || generatedId;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -196,7 +202,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         <span className="truncate flex-1 text-left">
           {allowFreeTextSearch && currentSearch ? (
             <span className="flex items-center gap-1.5">
-              <span className="opacity-70 text-xs font-normal">Search:</span>
+              <span className="opacity-70 text-xs font-normal">{t('Search:')}</span>
               <strong className="font-semibold truncate">"{currentSearch}"</strong>
               {selectedOption && (
                 <span className="opacity-80 text-xs font-normal">({selectedOption.label})</span>
@@ -212,7 +218,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
               )}
             </span>
           ) : (
-            <span className="opacity-50">{placeholder}</span>
+            <span className="opacity-50">{effectivePlaceholder}</span>
           )}
         </span>
 
@@ -221,7 +227,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
             <span
               role="button"
               tabIndex={0}
-              title="Clear search"
+              title={t('Clear search')}
               onClick={(e) => {
                 e.stopPropagation();
                 handleSearchChange('');
@@ -257,14 +263,14 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 type="text"
                 value={currentSearch}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder={searchPlaceholder}
+                placeholder={effectiveSearchPlaceholder}
                 className={`w-full pl-9 pr-8 py-2 text-xs rounded-xl outline-none transition-all ${searchInputClasses}`}
                 onClick={(e) => e.stopPropagation()}
               />
               {currentSearch && (
                 <button
                   type="button"
-                  title="Clear input"
+                  title={t('Clear input')}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSearchChange('');
@@ -278,13 +284,13 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
             </div>
             {allowFreeTextSearch && currentSearch && (
               <div className="mt-1.5 px-1 flex items-center justify-between text-[11px] opacity-75">
-                <span>Filtering by query: <strong>{currentSearch}</strong></span>
+                <span>{t('Filtering by query:')} <strong>{currentSearch}</strong></span>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
                   className="text-amber-500 font-bold hover:underline"
                 >
-                  Apply query
+                  {t('Apply query')}
                 </button>
               </div>
             )}
@@ -294,14 +300,14 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
           <div className="max-h-60 overflow-y-auto p-1.5 space-y-0.5 overscroll-contain">
             {filteredOptions.length === 0 ? (
               <div className="py-6 text-center text-xs opacity-60">
-                <p>{emptyMessage}</p>
+                <p>{effectiveEmptyMessage}</p>
                 {allowFreeTextSearch && currentSearch && (
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
                     className="mt-2 text-xs font-bold text-amber-500 hover:underline inline-block"
                   >
-                    Search all records for "{currentSearch}"
+                    {t('Search all records for "{{query}}"', { query: currentSearch })}
                   </button>
                 )}
               </div>

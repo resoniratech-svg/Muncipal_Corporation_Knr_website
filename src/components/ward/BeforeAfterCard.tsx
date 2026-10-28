@@ -4,6 +4,7 @@ import { MapPin, CheckCircle, Clock } from 'lucide-react';
 import { StatusChip } from '../common/StatusChip';
 import { FullImagePreview } from '../common/FullImagePreview';
 import { isPhotoSource } from '../../data/grievances';
+import { usePrefs } from '../../i18n';
 
 interface EvidenceProps {
   caseId?: string;
@@ -30,30 +31,32 @@ export const BeforeAfterCard: React.FC<EvidenceProps> = ({
   beforeImage = 'images/field-evidence/sanitation-work.jpg',
   afterImage = 'images/field-evidence/street-lights-fixed.jpg',
 }) => {
+  const { t } = usePrefs();
+
   return (
     <div className="bg-white rounded-xl shadow-card border border-slate-200 p-4 overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2.5 mb-3 border-b border-slate-100 gap-2">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold font-mono text-kmc-navy bg-slate-100 px-2 py-0.5 rounded">
-              Case ID: {caseId}
+              {t('Case ID')}: {caseId}
             </span>
             <StatusChip status={status} size="sm" />
             <span className="text-[11px] bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded border border-slate-200">
-              Demonstration Evidence Photo
+              {t('Demonstration Evidence Photo')}
             </span>
           </div>
           <h4 className="text-sm font-bold font-heading text-slate-800 uppercase mt-1">
-            {issue}
+            {t(issue)}
           </h4>
           <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
             <MapPin className="w-3 h-3 text-red-500" />
-            <span>{location}</span>
+            <span>{t(location)}</span>
           </p>
         </div>
 
         <div className="text-[11px] font-mono bg-blue-50 text-blue-900 border border-blue-200 px-2.5 py-1 rounded-lg">
-          Geo-tag: {lat.toFixed(4)}, {lng.toFixed(4)}
+          {t('Geo-tag')}: {lat.toFixed(4)}, {lng.toFixed(4)}
         </div>
       </div>
 
@@ -65,10 +68,10 @@ export const BeforeAfterCard: React.FC<EvidenceProps> = ({
             <div className="h-44 sm:h-52 relative">
               <FullImagePreview
                 src={beforeImage}
-                alt={`Before evidence: ${issue}`}
-                title={`BEFORE: ${issue}`}
-                caption={beforeDesc}
-                location={location}
+                alt={`${t('BEFORE')}: ${t(issue)}`}
+                title={`${t('BEFORE')}: ${t(issue)}`}
+                caption={t(beforeDesc)}
+                location={t(location)}
                 badge="BEFORE"
                 badgeVariant="before"
                 className="h-full rounded-none border-0"
@@ -80,14 +83,14 @@ export const BeforeAfterCard: React.FC<EvidenceProps> = ({
                 !
               </div>
               <span className="text-[11px] font-bold text-amber-950 uppercase tracking-wide">
-                BEFORE EVIDENCE
+                {t('BEFORE EVIDENCE')}
               </span>
-              <span className="text-[11px] text-amber-900 line-clamp-1">{beforeDesc}</span>
+              <span className="text-[11px] text-amber-900 line-clamp-1">{t(beforeDesc)}</span>
             </div>
           )}
           <div className="p-2 bg-white text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-100">
-            <span>Reported Condition</span>
-            <span className="text-amber-700 font-semibold">Pre-Work</span>
+            <span>{t('Reported Condition')}</span>
+            <span className="text-amber-700 font-semibold">{t('Pre-Work')}</span>
           </div>
         </div>
 
@@ -97,10 +100,10 @@ export const BeforeAfterCard: React.FC<EvidenceProps> = ({
             <div className="h-44 sm:h-52 relative">
               <FullImagePreview
                 src={afterImage}
-                alt={`After resolution: ${issue}`}
-                title={`AFTER: ${issue}`}
-                caption={afterDesc}
-                location={location}
+                alt={`${t('AFTER')}: ${t(issue)}`}
+                title={`${t('AFTER')}: ${t(issue)}`}
+                caption={t(afterDesc)}
+                location={t(location)}
                 badge="AFTER"
                 badgeVariant="after"
                 className="h-full rounded-none border-0"
@@ -120,19 +123,19 @@ export const BeforeAfterCard: React.FC<EvidenceProps> = ({
               <span className={`text-[11px] font-bold uppercase tracking-wide ${
                 status === 'Completed' ? 'text-emerald-950' : 'text-blue-950'
               }`}>
-                {status === 'Completed' ? 'AFTER EVIDENCE' : 'WORK IN PROGRESS'}
+                {status === 'Completed' ? t('AFTER EVIDENCE') : t('WORK IN PROGRESS')}
               </span>
               <span className={`text-[11px] line-clamp-1 ${
                 status === 'Completed' ? 'text-emerald-900' : 'text-blue-900'
               }`}>
-                {status === 'Completed' ? afterDesc : 'Technicians dispatched'}
+                {status === 'Completed' ? t(afterDesc) : t('Technicians dispatched')}
               </span>
             </div>
           )}
           <div className="p-2 bg-white text-[11px] text-slate-500 flex items-center justify-between">
-            <span>Verified Resolution</span>
+            <span>{t('Verified Resolution')}</span>
             <span className={`font-semibold ${status === 'Completed' ? 'text-emerald-700' : 'text-blue-700'}`}>
-              {status === 'Completed' ? '100% Quality Pass' : 'Under Review'}
+              {status === 'Completed' ? t('100% Quality Pass') : t('Under Review')}
             </span>
           </div>
         </div>

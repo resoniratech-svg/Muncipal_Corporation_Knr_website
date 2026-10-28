@@ -14,6 +14,83 @@
   .form-field {
     @apply w-full min-h-[40px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-kmc-navy focus:ring-2 focus:ring-kmc-navy/20;
   }
+
+  /* Transparent Glassmorphism Utilities for Login & Portal Cards */
+  .glass-card-main {
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-panel-brand {
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.24);
+  }
+
+  .glass-panel-intro {
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.28);
+  }
+
+  .glass-tier-card {
+    background-color: rgba(15, 23, 42, 0.40);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .glass-tier-card:hover {
+    background-color: rgba(15, 23, 42, 0.60);
+    border-color: rgba(255, 255, 255, 0.24);
+  }
+
+  .glass-demo-card {
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .glass-demo-card:hover {
+    background-color: rgba(15, 23, 42, 0.70);
+    border-color: rgba(251, 191, 36, 0.55);
+    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  .glass-form-input {
+    background-color: rgba(15, 23, 42, 0.50);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: all 0.2s ease;
+  }
+  .glass-form-input:focus {
+    background-color: rgba(15, 23, 42, 0.65);
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25);
+  }
+
+  .glass-control-btn {
+    background-color: rgba(15, 23, 42, 0.50);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: all 0.2s ease;
+  }
+  .glass-control-btn:hover {
+    background-color: rgba(15, 23, 42, 0.68);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
 }
 
 /* Custom scrollbars */
@@ -48,11 +125,11 @@ html[data-font='sm'] { font-size: 14px; }
 html[data-font='lg'] { font-size: 18px; }
 
 /* Telugu and Hindi need fonts with those scripts; Oswald headings have no Indic glyphs */
-html[lang='te'] body, html[lang='te'] .font-heading, html[lang='te'] h1, html[lang='te'] h2, html[lang='te'] h3 {
+html[lang='te'], html[lang='te'] body, html[lang='te'] .font-heading, html[lang='te'] h1, html[lang='te'] h2, html[lang='te'] h3, html[lang='te'] h4, html[lang='te'] h5, html[lang='te'] h6, html[lang='te'] button, html[lang='te'] input, html[lang='te'] select, html[lang='te'] textarea {
   font-family: 'Noto Sans Telugu', 'Inter', system-ui, sans-serif;
   letter-spacing: 0;
 }
-html[lang='hi'] body, html[lang='hi'] .font-heading, html[lang='hi'] h1, html[lang='hi'] h2, html[lang='hi'] h3 {
+html[lang='hi'], html[lang='hi'] body, html[lang='hi'] .font-heading, html[lang='hi'] h1, html[lang='hi'] h2, html[lang='hi'] h3, html[lang='hi'] h4, html[lang='hi'] h5, html[lang='hi'] h6, html[lang='hi'] button, html[lang='hi'] input, html[lang='hi'] select, html[lang='hi'] textarea {
   font-family: 'Noto Sans Devanagari', 'Inter', system-ui, sans-serif;
   letter-spacing: 0;
 }

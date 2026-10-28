@@ -48,7 +48,12 @@ const lookup = (dict: unknown, key: string): unknown =>
 
 const fill = (value: unknown, key: string, vars?: Record<string, string | number>) => {
   let text = typeof value === 'string' ? value : key;
-  if (vars) Object.entries(vars).forEach(([k, v]) => (text = text.split(`{${k}}`).join(String(v))));
+  if (vars) {
+    Object.entries(vars).forEach(([k, v]) => {
+      text = text.split(`{{${k}}}`).join(String(v));
+      text = text.split(`{${k}}`).join(String(v));
+    });
+  }
   return text;
 };
 
@@ -141,9 +146,10 @@ export const PrefsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }
 
-      // 7. Compound: Dot separator " · " (e.g. "GRV-2024-27-0045 · Ward 27 · Ramakrishna Nagar")
-      if (trimmed.includes(' · ')) {
-        const parts = trimmed.split(' · ');
+      // 7. Compound: Dot / Bullet separator " · " or " • " (e.g. "Ward 27 • Green Park Colony" or "GRV-2024-27-0045 · Ward 27 · Ramakrishna Nagar")
+      if (trimmed.includes(' · ') || trimmed.includes(' • ')) {
+        const sep = trimmed.includes(' · ') ? ' · ' : ' • ';
+        const parts = trimmed.split(sep);
         const translatedParts = parts.map((part) => {
           const p = part.trim();
           if (platformDict[p]) return platformDict[p];
@@ -152,10 +158,22 @@ export const PrefsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (wardMatch) return prefs.lang === 'te' ? `వార్డు ${wardMatch[1]}` : `वार्ड ${wardMatch[1]}`;
           return p;
         });
-        return translatedParts.join(' · ');
+        return translatedParts.join(sep);
       }
 
-      // 8. Dynamic regex matchers
+      // 8. Parenthesis role match (e.g. "Mahesh (Field Staff)" or "Suresh (Electrician)")
+      const parenMatch = trimmed.match(/^(.+?)\s*\((.+?)\)$/);
+      if (parenMatch) {
+        const namePart = parenMatch[1].trim();
+        const rolePart = parenMatch[2].trim();
+        const transName = platformDict[namePart] || lowerMap[namePart.toLowerCase()] || namePart;
+        const transRole = platformDict[rolePart] || lowerMap[rolePart.toLowerCase()] || (lookup(DICTS[prefs.lang], rolePart) as string) || rolePart;
+        if (transRole !== rolePart || transName !== namePart) {
+          return `${transName} (${transRole})`;
+        }
+      }
+
+      // 9. Dynamic regex matchers
       const wardOnly = trimmed.match(/^Ward (\d+)$/i);
       if (wardOnly) {
         return prefs.lang === 'te' ? `వార్డు ${wardOnly[1]}` : `वार्ड ${wardOnly[1]}`;
@@ -170,6 +188,22 @@ export const PrefsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const count = showMoreMatch[1];
         if (prefs.lang === 'te') return count ? `మరిన్ని చూపించు (${count})` : 'మరిన్ని చూపించు';
         return count ? `और दिखाएं (${count})` : 'और दिखाएं';
+      }
+
+      // Audited by X matcher
+      const auditedByMatch = trimmed.match(/^Audited by (.+)$/i);
+      if (auditedByMatch) {
+        const reviewer = auditedByMatch[1].trim();
+        const transReviewer = platformDict[reviewer] || lowerMap[reviewer.toLowerCase()] || reviewer;
+        return prefs.lang === 'te' ? `${transReviewer} చే తనిఖీ చేయబడింది` : `${transReviewer} द्वारा जाँचा गया`;
+      }
+
+      // Solved by X matcher
+      const solvedByMatch = trimmed.match(/^Solved by:?\s*(.+)$/i);
+      if (solvedByMatch) {
+        const solved = solvedByMatch[1].trim();
+        const transSolved = platformDict[solved] || lowerMap[solved.toLowerCase()] || solved;
+        return prefs.lang === 'te' ? `పరిష్కరించిన వారు: ${transSolved}` : `हलकर्ता: ${transSolved}`;
       }
 
       // Fallback to English dictionary or key itself

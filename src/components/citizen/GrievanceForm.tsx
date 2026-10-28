@@ -5,6 +5,7 @@ import { DepartmentName } from '../../data/grievances';
 import { Camera, Send, CheckCircle2, AlertCircle, X, Image as ImageIcon } from 'lucide-react';
 import { SearchableSelect } from '../common/SearchableSelect';
 import { FullImagePreview } from '../common/FullImagePreview';
+import { usePrefs } from '../../i18n';
 
 interface GrievanceFormProps {
   onSuccess?: (id: string) => void;
@@ -14,6 +15,7 @@ interface GrievanceFormProps {
 export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact = false }) => {
   const { submitGrievance, activeWardId, wards } = useApp();
   const { currentUser } = useAuth();
+  const { t } = usePrefs();
 
   const [category, setCategory] = useState('Drainage Issue');
   const [selectedWard, setSelectedWard] = useState<number>(currentUser?.assignedWardIds?.[0] || activeWardId || 27);
@@ -128,17 +130,17 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
       <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-5 text-center animate-fade-in">
         <CheckCircle2 className="w-12 h-12 text-emerald-700 mx-auto mb-2" />
         <h4 className="text-sm font-bold font-heading text-emerald-900 uppercase">
-          Grievance Registered Successfully!
+          {t('Grievance Registered Successfully!')}
         </h4>
         <div className="mt-2 inline-block bg-white border border-emerald-300 px-3 py-1 rounded-lg">
-          <span className="text-[11px] uppercase font-bold text-slate-500 block">Complaint Tracking ID</span>
+          <span className="text-[11px] uppercase font-bold text-slate-500 block">{t('Complaint Tracking ID')}</span>
           <span className="text-sm font-mono font-bold text-emerald-800">{submittedId}</span>
         </div>
         <p className="text-xs text-emerald-700 mt-2">
-          SMS confirmation dispatched. Auto-routed to <strong>Ward {selectedWard} Corporator ({targetWard?.corporator})</strong> & <strong>{getDepartmentForCategory(category)}</strong> Department.
+          {t('SMS confirmation dispatched. Auto-routed to')} <strong>{t(`Ward ${selectedWard}`)} {t('Corporator')} ({t(targetWard?.corporator || '')})</strong> & <strong>{t(getDepartmentForCategory(category))}</strong> {t('Department.')}
         </p>
         <p className="text-[11px] text-emerald-800 font-medium mt-1">
-          Ground task created on Ward {selectedWard} roster • Real-time status visible on Ward Dashboard.
+          {t(`Ground task created on Ward ${selectedWard} roster • Real-time status visible on Ward Dashboard.`)}
         </p>
         <button
           onClick={() => {
@@ -148,7 +150,7 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
           }}
           className="mt-4 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold uppercase shadow transition-all"
         >
-          Submit Another Grievance
+          {t('Submit Another Grievance')}
         </button>
       </div>
     );
@@ -159,40 +161,40 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
       <div className="border-b border-slate-100 pb-2 flex items-center justify-between">
         <div>
           <h4 className="text-xs font-bold font-heading uppercase text-slate-800">
-            Submit a Public Grievance
+            {t('Submit a Public Grievance')}
           </h4>
           <p className="text-[11px] text-slate-500">
-            Filing as: <strong>{currentUser?.displayName || 'Citizen Resident'}</strong>
+            {t('Filing as:')} <strong>{t(currentUser?.displayName || 'Citizen Resident')}</strong>
           </p>
         </div>
         <span className="text-[11px] bg-blue-50 text-kmc-navy font-bold px-2 py-0.5 rounded border border-blue-200">
-          Ward {selectedWard} ({targetWard?.name || 'KMC'})
+          {t(`Ward ${selectedWard}`)} ({t(targetWard?.name || 'KMC')})
         </span>
       </div>
 
       {errorMessage && (
         <div className="p-2 bg-rose-50 border border-rose-300 text-rose-800 rounded-lg text-xs flex items-center gap-1.5">
           <AlertCircle className="w-4 h-4 text-rose-700 shrink-0" />
-          <span>{errorMessage}</span>
+          <span>{t(errorMessage)}</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-            Category
+            {t('Category')}
           </label>
           <SearchableSelect
             value={category}
             onChange={(val) => setCategory(val)}
-            searchPlaceholder="Search issue category..."
+            searchPlaceholder={t('Search staff category...')}
             options={[
-              { value: 'Drainage Issue', label: 'Drainage Issue (Engineering)' },
-              { value: 'Sanitation & Garbage', label: 'Sanitation & Garbage' },
-              { value: 'Water Supply & Leakage', label: 'Water Supply & Leakage' },
-              { value: 'Street Light Problem', label: 'Street Light Problem (Electrical)' },
-              { value: 'Roads & Potholes', label: 'Roads & Potholes (Engineering)' },
-              { value: 'Town Planning Violation', label: 'Town Planning Violation' },
+              { value: 'Drainage Issue', label: `${t('Drainage Issue')} (${t('Engineering')})` },
+              { value: 'Sanitation & Garbage', label: t('Sanitation & Garbage') },
+              { value: 'Water Supply & Leakage', label: t('Water Supply & Leakage') },
+              { value: 'Street Light Problem', label: `${t('Street Light Problem')} (${t('Electrical')})` },
+              { value: 'Roads & Potholes', label: `${t('Roads & Potholes')} (${t('Engineering')})` },
+              { value: 'Town Planning Violation', label: t('Town Planning Violation') },
             ]}
             fullWidth
             size="sm"
@@ -202,11 +204,11 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
         <div>
           <div className="flex items-center justify-between mb-1">
             <label className="block text-[11px] font-semibold text-slate-600">
-              Ward Division (Any of 66 Wards)
+              {t('Ward Division')}
             </label>
             {isCrossWard && (
               <span className="text-[11px] bg-purple-100 text-purple-800 font-bold px-1.5 py-0.5 rounded">
-                Cross-Ward
+                {t('Cross-Ward')}
               </span>
             )}
           </div>
@@ -220,11 +222,11 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
                 setLocation(`${found.name}, Ward ${newWardId}`);
               }
             }}
-            searchPlaceholder="Search 66 municipal wards..."
+            searchPlaceholder={t('Search 66 wards...')}
             options={wards.map((w) => ({
               value: w.id,
-              label: `Ward ${w.id}: ${w.name}`,
-              sublabel: w.corporator ? `Corp. ${w.corporator}` : undefined,
+              label: `${t(`Ward ${w.id}`)}: ${t(w.name)}`,
+              sublabel: w.corporator ? `${t('Corp')} ${t(w.corporator)}` : undefined,
             }))}
             fullWidth
             size="sm"
@@ -236,30 +238,30 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
       <div className="p-2.5 bg-blue-50/70 border border-blue-200 rounded-lg text-xs space-y-1">
         <div className="flex items-center justify-between">
           <span className="text-[11px] uppercase font-bold text-kmc-navy tracking-wide">
-            Automated Governance Routing
+            {t('Automated Governance Routing')}
           </span>
           <span className="text-[11px] font-mono bg-blue-100 text-blue-900 px-1.5 py-0.5 rounded font-semibold">
-            Ward {selectedWard}
+            {t(`Ward ${selectedWard}`)}
           </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-slate-700">
           <div>
-            <span className="text-slate-500">Elected Corporator:</span>{' '}
-            <strong className="text-slate-900">{targetWard?.corporator || 'Ward Representative'}</strong>
+            <span className="text-slate-500">{t('Elected Corporator:')}</span>{' '}
+            <strong className="text-slate-900">{t(targetWard?.corporator || 'Ward Corporator')}</strong>
             {targetWard?.party && (
               <span className="text-[11px] text-slate-500 ml-1">({targetWard.party})</span>
             )}
           </div>
           <div>
-            <span className="text-slate-500">Executive Wing:</span>{' '}
-            <strong className="text-slate-900">{getDepartmentForCategory(category)} Department</strong>
+            <span className="text-slate-500">{t('Executive Wing:')}</span>{' '}
+            <strong className="text-slate-900">{t(getDepartmentForCategory(category))} {t('Department')}</strong>
           </div>
         </div>
         {isCrossWard && (
           <p className="text-[11px] text-purple-700 font-medium pt-1 border-t border-blue-100 flex items-center gap-1">
             <span>ℹ️</span>
             <span>
-              Reporting an issue outside your home ward (Ward {homeWardId}). This will route directly to <strong>Ward {selectedWard} Corporator ({targetWard?.corporator})</strong> and trigger ground tasks in {targetWard?.name}.
+              {t('Cross-Ward')}
             </span>
           </p>
         )}
@@ -267,13 +269,13 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
 
       <div>
         <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-          Exact Location / Landmark
+          {t('Exact Location / Landmark')}
         </label>
         <input
           type="text"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          placeholder="e.g. Near Community Hall, Booth Colony, Ward 12"
+          placeholder={t('Exact Location / Landmark')}
           className="form-field"
           required
         />
@@ -281,13 +283,13 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
 
       <div>
         <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-          Problem Description
+          {t('Problem Description')}
         </label>
         <textarea
           rows={compact ? 2 : 3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe the issue, urgency, or nearby landmarks..."
+          placeholder={t('Problem Description')}
           className="form-field"
           required
         />
@@ -295,7 +297,7 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
 
       <div>
         <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-          Photographic Evidence (Optional)
+          {t('Photo Evidence')}
         </label>
         <input
           type="file"
@@ -326,7 +328,7 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
               type="button"
               onClick={removePhoto}
               className="p-1 hover:bg-emerald-200 text-emerald-800 rounded"
-              title="Remove Photo"
+              title={t('Close')}
             >
               <X className="w-4 h-4" />
             </button>
@@ -338,9 +340,9 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
           >
             <Camera className="w-5 h-5 mx-auto mb-1 text-slate-500" />
             <span className="text-[11px] font-semibold text-slate-700 block">
-              Click to attach camera photo evidence
+              {t('Click to attach camera photo evidence')}
             </span>
-            <span className="text-[11px] text-slate-500">JPG, PNG up to 2MB (Geo-tagged automatically)</span>
+            <span className="text-[11px] text-slate-500">{t('JPG, PNG up to 2MB (Geo-tagged automatically)')}</span>
           </div>
         )}
       </div>
@@ -351,7 +353,7 @@ export const GrievanceForm: React.FC<GrievanceFormProps> = ({ onSuccess, compact
         className="w-full py-2 min-h-[36px] bg-kmc-navy hover:bg-kmc-navy-light disabled:bg-slate-400 text-white text-xs font-bold rounded-lg shadow uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
       >
         <Send className="w-3.5 h-3.5" />
-        <span>{isSubmitting ? 'Registering Grievance...' : 'SUBMIT GRIEVANCE'}</span>
+        <span>{isSubmitting ? t('Registering Grievance...') : t('SUBMIT GRIEVANCE')}</span>
       </button>
     </form>
   );

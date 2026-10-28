@@ -234,7 +234,7 @@ export const QaAuditPage: React.FC = () => {
                       </span>
 
                       <span className="text-xs font-bold bg-amber-50 text-amber-900 px-2.5 py-0.5 rounded border border-amber-200">
-                        Ward {grievance.wardId} • {wardInfo.name}
+                        {t(`Ward ${grievance.wardId}`)} • {t(wardInfo.name)}
                       </span>
 
                       <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
@@ -256,12 +256,12 @@ export const QaAuditPage: React.FC = () => {
 
                       <div className="flex items-center gap-1.5">
                         <UserCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                        <span><strong>{t("Solved by")}:</strong> <span className="text-slate-900 font-semibold">{grievance.assignedTo || t("Field Staff")}</span></span>
+                        <span><strong>{t("Solved by")}:</strong> <span className="text-slate-900 font-semibold">{t(grievance.assignedTo || "Field Staff")}</span></span>
                       </div>
 
                       <div className="flex items-center gap-1.5">
                         <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                        <span><strong>{t("Corporator")}:</strong> <span className="text-slate-900 font-semibold">{wardInfo.corporator}</span></span>
+                        <span><strong>{t("Corporator")}:</strong> <span className="text-slate-900 font-semibold">{t(wardInfo.corporator)}</span></span>
                       </div>
                     </div>
 
@@ -271,7 +271,7 @@ export const QaAuditPage: React.FC = () => {
                         <span className="inline-flex items-center gap-1.5 text-xs text-emerald-800 font-bold bg-emerald-100/80 px-2.5 py-1 rounded-md border border-emerald-300">
                           <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-700" />
                           <span>
-                            {t("Audited by {{reviewer}}", { reviewer: reviewMeta.reviewer })}
+                            {t("Audited by {{reviewer}}", { reviewer: t(reviewMeta.reviewer) })}
                             {reviewMeta.timestamp && ` • ${new Date(reviewMeta.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                           </span>
                         </span>

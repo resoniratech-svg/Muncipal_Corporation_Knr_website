@@ -86,7 +86,7 @@ export const FieldStaffTasksPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-kmc-bg">
       <BannerStrip
-        title={`${t('Field Operations Portal')} • ${staffName}`}
+        title={`${t('Field Operations Portal')} • ${t(staffName)}`}
         tagline="Receive tasks, update status, upload evidence, and close assignments"
         actionButton={
           <div className="flex items-center gap-2 bg-slate-900/90 border border-amber-400 px-3 py-1.5 rounded-lg text-xs font-bold text-amber-300">
@@ -144,21 +144,20 @@ export const FieldStaffTasksPage: React.FC = () => {
               })()}
             </div>
             <h2 className="text-xl sm:text-2xl font-bold font-heading uppercase text-slate-900">
-              {staffName} — Operational Ground Queue
+              {t(staffName)} — {t('Operational Ground Queue')}
             </h2>
             <p className="text-sm text-slate-600 mt-0.5">
-              Authorized Operational Ward: <strong>Ward {staffWardId} ({wardName})</strong>.
-              You cannot be assigned or view operational work outside this ward.
+              {t('Authorized Operational Ward:')} <strong>{t('Ward')} {staffWardId} ({t(wardName)})</strong>. {t('You cannot be assigned or view operational work outside this ward.')}
             </p>
             {(() => {
               const staffObj = userRepository.getStaffByIdOrName(currentUser?.id || staffName);
               if (staffObj?.skills && staffObj.skills.length > 0) {
                 return (
                   <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase">Verified Skills:</span>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase">{t('Verified Skills:')}</span>
                     {staffObj.skills.map((skill, idx) => (
                       <span key={idx} className="text-[10px] font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-                        {skill}
+                        {t(skill)}
                       </span>
                     ))}
                   </div>
@@ -241,7 +240,7 @@ export const FieldStaffTasksPage: React.FC = () => {
         </section>
       </main>
 
-      <FooterStrip tagline="Stronger Wards. Efficient Services. Happier Citizens." />
+      <FooterStrip tagline={t('Stronger Wards. Efficient Services. Happier Citizens.')} />
     </div>
   );
 };
@@ -361,7 +360,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, grievance, first, onStart, on
             <PhotoPicker photos={photos} onChange={(p) => { setPhotos(p); setError(null); }} altPrefix={`After photo of ${problem}`} />
             <p className="text-sm text-slate-700 flex items-center gap-1.5">
               <CalendarClock className="w-4 h-4" aria-hidden="true" />
-              Geo-tag {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)} · {nowStamp()}
+              {t('Geo-tag')} {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)} · {nowStamp()}
             </p>
             <label htmlFor={`notes-${task.id}`} className="block text-base font-semibold">{t('What did you do? (optional)')}</label>
             <textarea id={`notes-${task.id}`} rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-xl border-2 border-slate-300 p-3 text-base" />

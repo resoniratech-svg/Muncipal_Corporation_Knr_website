@@ -12,7 +12,7 @@ interface TourStep {
   text: string;
 }
 
-// Citizen steps are translated; staff/leadership steps keep the deck's English labels.
+// Role tours localized across all 7 roles
 const ROLE_TOURS: Partial<Record<UserRole, (t: (k: string) => string) => TourStep[]>> = {
   citizen: (t) => [
     { title: t('tour.citizen1Title'), text: t('tour.citizen1Text') },
@@ -20,42 +20,42 @@ const ROLE_TOURS: Partial<Record<UserRole, (t: (k: string) => string) => TourSte
     { target: '[data-tour="track"]', title: t('tour.citizen3Title'), text: t('tour.citizen3Text') },
     { target: '[data-tour="help"]', title: t('tour.citizen4Title'), text: t('tour.citizen4Text') },
   ],
-  corporator: () => [
-    { title: 'Your ward at a glance', text: 'This page shows every complaint, task and work in your ward.' },
-    { target: '[data-tour="new-complaints"]', title: 'New complaints', text: 'Check each new complaint and send it to field staff with one tap.' },
-    { target: '[data-tour="verify"]', title: 'Check the work', text: 'Compare the before and after photos. Tap Approve & Close, or Send Back with a reason.' },
-    { target: '[data-tour="help"]', title: 'Need help?', text: 'Tap Help at any time.' },
+  corporator: (t) => [
+    { title: t('Your ward at a glance'), text: t('This page shows every complaint, task and work in your ward.') },
+    { target: '[data-tour="new-complaints"]', title: t('New complaints'), text: t('Check each new complaint and send it to field staff with one tap.') },
+    { target: '[data-tour="verify"]', title: t('Check the work'), text: t('Compare the before and after photos. Tap Approve & Close, or Send Back with a reason.') },
+    { target: '[data-tour="help"]', title: t('Need help?'), text: t('Tap Help at any time.') },
   ],
-  field_staff: () => [
-    { title: 'Your tasks', text: 'Every task given to you is listed here, with the citizen’s before photo.' },
-    { target: '[data-tour="task"]', title: 'One task', text: 'Start the work, then come back when it is done.' },
-    { target: '[data-tour="done-btn"]', title: 'Mark as Done & Upload Photo', text: 'Take the after photo from the same spot as the before photo. A task cannot be closed without it.' },
-    { target: '[data-tour="help"]', title: 'Need help?', text: 'Tap Help at any time.' },
+  field_staff: (t) => [
+    { title: t('Your tasks'), text: t('Every task given to you is listed here, with the citizen’s before photo.') },
+    { target: '[data-tour="task"]', title: t('One task'), text: t('Start the work, then come back when it is done.') },
+    { target: '[data-tour="done-btn"]', title: t('Mark as Done & Upload Photo'), text: t('Take the after photo from the same spot as the before photo. A task cannot be closed without it.') },
+    { target: '[data-tour="help"]', title: t('Need help?'), text: t('Tap Help at any time.') },
   ],
-  mayor_commissioner: () => [
-    { title: 'Leadership Dashboard', text: 'City-wide numbers first, details below.' },
-    { target: '[data-tour="kpis"]', title: 'Top KPIs', text: 'Complaints, progress and resolution rate for all 66 wards.' },
-    { target: '[data-tour="complaints"]', title: 'Recent complaints', text: 'Tap any complaint to see its before and after photos.' },
-    { target: '[data-tour="reopened"]', title: 'Reopened complaints', text: 'Complaints that citizens say are not solved appear here, escalated one level.' },
-    { target: '[data-tour="help"]', title: 'Need help?', text: 'Tap Help at any time.' },
+  mayor_commissioner: (t) => [
+    { title: t('Leadership Dashboard'), text: t('City-wide numbers first, details below.') },
+    { target: '[data-tour="kpis"]', title: t('Top KPIs'), text: t('Complaints, progress and resolution rate for all 66 wards.') },
+    { target: '[data-tour="complaints"]', title: t('Recent complaints'), text: t('Tap any complaint to see its before and after photos.') },
+    { target: '[data-tour="reopened"]', title: t('Reopened complaints'), text: t('Complaints that citizens say are not solved appear here, escalated one level.') },
+    { target: '[data-tour="help"]', title: t('Need help?'), text: t('Tap Help at any time.') },
   ],
-  super_admin: () => [
-    { title: 'Platform overview', text: 'Pick a role to see the platform the way that person does.' },
-    { target: '[data-tour="roles"]', title: 'Three roles', text: 'Citizen, Ward Councillor / Field Staff, and Mayor / Commissioner.' },
-    { target: '[data-tour="demo-menu"]', title: 'Demo menu', text: 'Run the Quick Demo for officials, or reset all demo data.' },
-    { target: '[data-tour="help"]', title: 'Need help?', text: 'Tap Help at any time.' },
+  super_admin: (t) => [
+    { title: t('Platform overview'), text: t('Pick a role to see the platform the way that person does.') },
+    { target: '[data-tour="roles"]', title: t('Three roles'), text: t('Citizen, Ward Councillor / Field Staff, and Mayor / Commissioner.') },
+    { target: '[data-tour="demo-menu"]', title: t('Demo menu'), text: t('Run the Quick Demo for officials, or reset all demo data.') },
+    { target: '[data-tour="help"]', title: t('Need help?'), text: t('Tap Help at any time.') },
   ],
-  department_officer: () => [
-    { title: 'Department console', text: 'Complaints for your department, with SLA timers.' },
-    { target: '[data-tour="nav"]', title: 'Navigation', text: 'Your pages are in this bar.' },
-    { target: '[data-tour="demo-menu"]', title: 'Demo menu', text: 'Reset or replay the demo from here.' },
-    { target: '[data-tour="help"]', title: 'Need help?', text: 'Tap Help at any time.' },
+  department_officer: (t) => [
+    { title: t('Department console'), text: t('Complaints for your department, with SLA timers.') },
+    { target: '[data-tour="nav"]', title: t('Navigation'), text: t('Your pages are in this bar.') },
+    { target: '[data-tour="demo-menu"]', title: t('Demo menu'), text: t('Reset or replay the demo from here.') },
+    { target: '[data-tour="help"]', title: t('Need help?'), text: t('Tap Help at any time.') },
   ],
-  governance_auditor: () => [
-    { title: 'Monitoring', text: 'Reports, rankings and the audit trail.' },
-    { target: '[data-tour="nav"]', title: 'Navigation', text: 'Your pages are in this bar.' },
-    { target: '[data-tour="demo-menu"]', title: 'Demo menu', text: 'Reset or replay the demo from here.' },
-    { target: '[data-tour="help"]', title: 'Need help?', text: 'Tap Help at any time.' },
+  governance_auditor: (t) => [
+    { title: t('Monitoring'), text: t('Reports, rankings and the audit trail.') },
+    { target: '[data-tour="nav"]', title: t('Navigation'), text: t('Your pages are in this bar.') },
+    { target: '[data-tour="demo-menu"]', title: t('Demo menu'), text: t('Reset or replay the demo from here.') },
+    { target: '[data-tour="help"]', title: t('Need help?'), text: t('Tap Help at any time.') },
   ],
 };
 

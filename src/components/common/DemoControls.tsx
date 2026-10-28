@@ -9,10 +9,11 @@ import { useQuickDemo } from '../../ui/QuickDemo';
 import { storedPhotoBytes } from '../../photos/photoStore';
 
 /** English | తెలుగు | हिन्दी toggle (citizen screens) */
-export const LanguageToggle: React.FC = () => {
+export const LanguageToggle: React.FC<{ glass?: boolean; className?: string }> = ({ glass, className = '' }) => {
   const { lang, setLang, t } = usePrefs();
+  const baseBg = glass ? 'bg-transparent' : 'bg-slate-800 border border-slate-700';
   return (
-    <div role="group" aria-label={t('common.language')} className="flex items-center rounded-lg bg-slate-800 border border-slate-700 p-0.5">
+    <div role="group" aria-label={t('common.language')} className={`flex items-center rounded-lg p-0.5 ${baseBg} ${className}`}>
       {LANGUAGES.map((l) => (
         <button
           key={l.code}
@@ -20,7 +21,13 @@ export const LanguageToggle: React.FC = () => {
           lang={l.code}
           aria-pressed={lang === l.code}
           onClick={() => setLang(l.code)}
-          className={`min-h-[36px] px-2.5 rounded-md text-xs font-bold ${lang === l.code ? 'bg-white text-slate-950' : 'text-slate-300 hover:text-white'}`}
+          className={`min-h-[36px] px-2.5 rounded-md text-xs font-bold transition-all ${
+            lang === l.code
+              ? 'bg-white text-slate-950 shadow-sm'
+              : glass
+              ? 'text-slate-200 hover:text-white hover:bg-white/10'
+              : 'text-slate-300 hover:text-white'
+          }`}
         >
           {l.label}
         </button>
@@ -61,6 +68,7 @@ export const DemoMenu: React.FC = () => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const { startTour } = useTour();
+  const { t } = usePrefs();
   const quickDemo = useQuickDemo();
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -94,7 +102,7 @@ export const DemoMenu: React.FC = () => {
         className="min-h-[36px] px-2.5 rounded-lg bg-amber-400 text-slate-950 text-xs font-bold flex items-center gap-1"
       >
         <FlaskConical className="w-4 h-4" aria-hidden="true" />
-        Demo
+        {t('Demo')}
         <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
       </button>
       {open && (
@@ -111,9 +119,9 @@ export const DemoMenu: React.FC = () => {
           >
             <PlayCircle className="w-5 h-5 text-kmc-green" aria-hidden="true" />
             <span>
-              Quick Demo (60 seconds)
+              {t('Quick Demo (60 seconds)')}
               <span className="block text-xs font-normal text-slate-500">
-                {canRunStory ? 'Report → route → after photo → approve → rate' : 'Sign in as Super Admin to run it'}
+                {canRunStory ? t('Report → route → after photo → approve → rate') : t('Sign in as Super Admin to run it')}
               </span>
             </span>
           </button>
@@ -127,14 +135,14 @@ export const DemoMenu: React.FC = () => {
             className="w-full min-h-[48px] px-3 rounded-lg text-left text-sm font-semibold flex items-center gap-2 hover:bg-slate-100"
           >
             <Compass className="w-5 h-5 text-kmc-navy" aria-hidden="true" />
-            Take the guided tour
+            {t('Take the guided tour')}
           </button>
           <div className="border-t border-slate-100 my-1" />
           {confirming ? (
             <div className="p-2 space-y-2">
-              <p className="text-sm">Reset Demo removes every complaint and photo added in this browser and restores the 12 demo complaints.</p>
+              <p className="text-sm">{t('Reset Demo removes every complaint and photo added in this browser and restores the 12 demo complaints.')}</p>
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => setConfirming(false)} className="min-h-[44px] rounded-lg border-2 border-slate-300 text-sm font-semibold">Cancel</button>
+                <button type="button" onClick={() => setConfirming(false)} className="min-h-[44px] rounded-lg border-2 border-slate-300 text-sm font-semibold">{t('Cancel')}</button>
                 <button
                   type="button"
                   data-testid="confirm-reset"
@@ -143,11 +151,11 @@ export const DemoMenu: React.FC = () => {
                     resetAllDemoData();
                     setOpen(false);
                     setConfirming(false);
-                    toast('Demo reset. All added complaints and photos were removed.');
+                    toast(t('Demo reset. All added complaints and photos were removed.'));
                   }}
                   className="min-h-[44px] rounded-lg bg-rose-700 text-white text-sm font-bold"
                 >
-                  Yes, reset
+                  {t('Yes, reset')}
                 </button>
               </div>
             </div>
@@ -160,8 +168,8 @@ export const DemoMenu: React.FC = () => {
             >
               <RotateCcw className="w-5 h-5" aria-hidden="true" />
               <span>
-                Reset Demo
-                <span className="block text-xs font-normal text-slate-500">Uploaded photos use about {usedKb} KB</span>
+                {t('Reset Demo')}
+                <span className="block text-xs font-normal text-slate-500">{t('Uploaded photos use about {{kb}} KB', { kb: usedKb })}</span>
               </span>
             </button>
           )}

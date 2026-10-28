@@ -21,7 +21,7 @@ export const TaskTable: React.FC = () => {
 
   const handleStart = (taskId: string) => {
     const res = updateTaskStatus(taskId, 'In Progress');
-    showToast(res.ok ? `Task ${taskId} started.` : res.error || 'Could not update the task.');
+    showToast(res.ok ? t('Task {{id}} started.', { id: taskId }) : res.error || t('Could not update the task.'));
   };
 
   return (
@@ -64,8 +64,8 @@ export const TaskTable: React.FC = () => {
                 <td colSpan={5} className="py-8 text-center text-slate-500">
                   <div className="flex flex-col items-center justify-center gap-1.5">
                     <AlertCircle className="w-6 h-6 text-slate-400" />
-                    <p className="font-semibold text-slate-700">No ground operational tasks currently assigned in Ward {activeWardId}.</p>
-                    <p className="text-[11px] text-slate-400">Tasks assigned to field staff in this ward will appear here.</p>
+                    <p className="font-semibold text-slate-700">{t('No ground operational tasks currently assigned in Ward {{ward}}.', { ward: activeWardId })}</p>
+                    <p className="text-[11px] text-slate-400">{t('Tasks assigned to field staff in this ward will appear here.')}</p>
                   </div>
                 </td>
               </tr>
@@ -86,18 +86,18 @@ export const TaskTable: React.FC = () => {
                       {linkedGrievance?.beforePhoto && (
                         <PhotoThumbnail
                           src={linkedGrievance.beforePhoto}
-                          alt={`Evidence for ${task.id}`}
+                          alt={`${t('Evidence for')} ${task.id}`}
                           size="sm"
                         />
                       )}
                       <div>
-                        <div className="font-semibold text-slate-900">{task.task}</div>
-                        <div className="text-[11px] font-mono text-slate-500">{task.id} • Ward {task.wardId}</div>
+                        <div className="font-semibold text-slate-900">{t(task.task)}</div>
+                        <div className="text-[11px] font-mono text-slate-500">{task.id} • {t('Ward')} {task.wardId}</div>
                       </div>
                     </div>
                   </td>
                 <td className="py-3 px-3 text-slate-700">
-                  <span className="font-semibold">{task.assignedTo}</span>
+                  <span className="font-semibold">{t(task.assignedTo)}</span>
                 </td>
                 <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
                   {task.dueDate}
@@ -120,7 +120,7 @@ export const TaskTable: React.FC = () => {
                       <Link
                         to="/field-tasks"
                         className="min-h-[44px] px-3 border-2 border-kmc-navy text-kmc-navy rounded-lg text-xs font-bold flex items-center gap-1"
-                        title="Field staff mark this done with an after photo"
+                        title={t('Field staff mark this done with an after photo')}
                       >
                         <Check className="w-3.5 h-3.5" aria-hidden="true" />
                         <span>{t('Done needs after photo →')}</span>

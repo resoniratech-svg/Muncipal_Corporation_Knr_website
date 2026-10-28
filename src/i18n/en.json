@@ -6,6 +6,7 @@
     "next": "Next",
     "close": "Close",
     "cancel": "Cancel",
+    "save": "Save",
     "ward": "Ward",
     "language": "Language",
     "textSize": "Text size",
@@ -23,6 +24,45 @@
     "fixed": "Fixed",
     "delayed": "Delayed",
     "reopened": "Reopened"
+  },
+  "qa": {
+    "resolvedGrievances": "Resolved Grievances Audit Matrix",
+    "resolvedIssues": "Resolved Issues",
+    "open": "Open",
+    "reviewerChecked": "Reviewer checked",
+    "assignmentDetails": "Solved By & Assigned Staff",
+    "beforePhoto": "Before Photo",
+    "afterPhoto": "After Photo",
+    "markAllAudited": "Mark All Audited",
+    "reset": "Reset",
+    "audited": "Audited",
+    "reviewComplete": "Review Complete",
+    "reviewCompleteAudited": "✓ Review Complete (Audited)",
+    "photosAvailable": "Before & After Photos Available"
+  },
+  "grievance": {
+    "status": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "resolved": "Resolved",
+      "overdue": "Overdue",
+      "reopened": "Reopened"
+    },
+    "category": {
+      "drainage": "Drainage",
+      "roads": "Roads",
+      "garbage": "Garbage",
+      "light": "Street Lights",
+      "water": "Water Supply",
+      "other": "Other"
+    }
+  },
+  "staff": {
+    "assign": "Assign Staff",
+    "reassign": "Reassign Staff",
+    "assignedStaff": "Assigned Staff",
+    "fieldStaff": "Field Staff"
   },
   "home": {
     "hello": "Hello, {name}",

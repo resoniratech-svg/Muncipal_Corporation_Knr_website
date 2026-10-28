@@ -77,21 +77,21 @@ export const NewComplaintsQueue: React.FC<{ wardId: number }> = ({ wardId }) => 
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-base font-bold">{g.category}: {g.description}</p>
+                    <p className="text-base font-bold">{t(g.category)}: {g.description}</p>
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
-                      Requires: {requiredCategory.name}
+                      {t('Requires')}: {t(requiredCategory.name)}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-600 flex items-center gap-1"><MapPin className="w-4 h-4" aria-hidden="true" />{g.location}</p>
-                  <p className="text-sm font-mono text-slate-500">{g.id} · {g.reportedOn} · {g.department}</p>
+                  <p className="text-sm text-slate-600 flex items-center gap-1"><MapPin className="w-4 h-4" aria-hidden="true" />{t(g.location)}</p>
+                  <p className="text-sm font-mono text-slate-500">{g.id} · {g.reportedOn} · {t(g.department)}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 md:w-auto items-stretch sm:items-center">
-                  <label className="sr-only" htmlFor={`staff-${g.id}`}>Field staff for {g.id}</label>
+                  <label className="sr-only" htmlFor={`staff-${g.id}`}>{t('Field staff for {{id}}', { id: g.id })}</label>
                   {eligibleStaff.length === 0 ? (
                     <div className="text-xs text-amber-900 bg-amber-50 border border-amber-300 px-3 py-2 rounded-xl flex items-center gap-1.5 max-w-sm">
                       <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                       <span>
-                        <strong>Awaiting Assignment:</strong> No active <em>{requiredCategory.name}</em> in Ward {g.wardId}.
+                        <strong>{t('Awaiting Assignment:')}</strong> {t('No active')} <em>{t(requiredCategory.name)}</em> {t('in Ward {{ward}}.', { ward: g.wardId })}
                       </span>
                     </div>
                   ) : (
@@ -99,11 +99,11 @@ export const NewComplaintsQueue: React.FC<{ wardId: number }> = ({ wardId }) => 
                       id={`staff-${g.id}`}
                       value={chosen}
                       onChange={(val) => setStaff((s) => ({ ...s, [g.id]: val }))}
-                      searchPlaceholder={`Search ${requiredCategory.name}...`}
+                      searchPlaceholder={t('Search {{name}}...', { name: t(requiredCategory.name) })}
                       options={eligibleStaff.map((s) => ({
                         value: s.displayName,
                         label: s.displayName,
-                        sublabel: `${s.staffCategory || s.roleTitle} • ${s.departmentName}`,
+                        sublabel: `${t(s.staffCategory || s.roleTitle)} • ${t(s.departmentName)}`,
                       }))}
                       size="md"
                       className="w-full sm:w-60"
@@ -115,7 +115,7 @@ export const NewComplaintsQueue: React.FC<{ wardId: number }> = ({ wardId }) => 
                     onClick={() => {
                       if (!chosen) return;
                       routeComplaint(g.id, chosen, corp);
-                      toast(`${g.id} sent to ${chosen}.`);
+                      toast(t('{{id}} sent to {{staff}}.', { id: g.id, staff: chosen }));
                     }}
                     className="min-h-[44px] px-4 rounded-xl bg-kmc-navy hover:bg-kmc-navy-light disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold flex items-center justify-center gap-2 transition-colors shrink-0"
                   >
@@ -159,15 +159,15 @@ export const VerificationQueue: React.FC<{ wardId: number }> = ({ wardId }) => {
           {queue.map((g) => (
             <article key={g.id} className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-base font-bold">{g.category}: {g.description}</span>
+                <span className="text-base font-bold">{t(g.category)}: {g.description}</span>
                 <span className="text-sm font-mono text-slate-500">{g.id}</span>
-                <CitizenStatus status={g.status} english />
+                <CitizenStatus status={g.status} />
               </div>
-              <BeforeAfterViewer before={getBeforePhotos(g)} after={getAfterPhotos(g)} problem={g.category.toLowerCase()} english />
+              <BeforeAfterViewer before={getBeforePhotos(g)} after={getAfterPhotos(g)} problem={t(g.category.toLowerCase())} />
               {sendingBack === g.id ? (
                 <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-3 space-y-2">
                   <label htmlFor={`reason-${g.id}`} className="block text-base font-semibold">{t('Why is the work sent back? (required)')}</label>
-                  <textarea id={`reason-${g.id}`} rows={2} value={reason} onChange={(e) => setReason(e.target.value)} className="w-full rounded-xl border-2 border-slate-300 p-3 text-base" placeholder="For example: the drain cover is still broken" />
+                  <textarea id={`reason-${g.id}`} rows={2} value={reason} onChange={(e) => setReason(e.target.value)} className="w-full rounded-xl border-2 border-slate-300 p-3 text-base" placeholder={t('For example: the drain cover is still broken')} />
                   {error && <p role="alert" className="text-base text-rose-900">{error}</p>}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <button type="button" onClick={() => { setSendingBack(null); setError(null); }} className="min-h-[48px] rounded-xl border-2 border-slate-300 bg-white text-base font-semibold">{t('Cancel')}</button>
@@ -175,11 +175,11 @@ export const VerificationQueue: React.FC<{ wardId: number }> = ({ wardId }) => {
                       type="button"
                       onClick={() => {
                         const res = sendBackComplaint(g.id, reason, corp);
-                        if (!res.ok) return setError(res.error || 'Please write a reason.');
+                        if (!res.ok) return setError(res.error || t('Please write a reason.'));
                         setSendingBack(null);
                         setReason('');
                         setError(null);
-                        toast(`${g.id} sent back to field staff.`, 'info');
+                        toast(t('{{id}} sent back to field staff.', { id: g.id }), 'info');
                       }}
                       className="min-h-[48px] rounded-xl bg-amber-600 text-white text-base font-bold"
                     >
@@ -193,7 +193,7 @@ export const VerificationQueue: React.FC<{ wardId: number }> = ({ wardId }) => {
                     type="button"
                     onClick={() => {
                       approveAndClose(g.id, corp);
-                      toast(`${g.id} approved and closed. The citizen got an SMS.`);
+                      toast(t('{{id}} approved and closed. The citizen got an SMS.', { id: g.id }));
                     }}
                     className="min-h-[52px] rounded-xl bg-kmc-green text-white text-base font-bold flex items-center justify-center gap-2"
                   >
@@ -224,6 +224,7 @@ export const VerificationQueue: React.FC<{ wardId: number }> = ({ wardId }) => {
  */
 export const EvidenceCards: React.FC<{ wardId: number }> = ({ wardId }) => {
   const { grievances } = useApp();
+  const { t } = usePrefs();
   const seeded = new Set(INITIAL_GRIEVANCES.map((g) => g.id));
   const withPhotos = grievances.filter((g) => g.wardId === wardId && getBeforePhotos(g).length);
   const fresh = withPhotos.filter((g) => !seeded.has(g.id));
@@ -240,11 +241,11 @@ export const EvidenceCards: React.FC<{ wardId: number }> = ({ wardId }) => {
         {cards.map((g) => (
           <article key={g.id}>
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <span className="text-sm font-mono font-bold text-kmc-navy">Case ID: {g.id}</span>
+              <span className="text-sm font-mono font-bold text-kmc-navy">{t('Case ID')}: {g.id}</span>
               <span className="text-base font-bold">{g.description}</span>
-              <CitizenStatus status={g.status} english />
+              <CitizenStatus status={g.status} />
             </div>
-            <BeforeAfterViewer before={getBeforePhotos(g)} after={getAfterPhotos(g)} problem={g.category.toLowerCase()} english compact />
+            <BeforeAfterViewer before={getBeforePhotos(g)} after={getAfterPhotos(g)} problem={t(g.category.toLowerCase())} compact />
           </article>
         ))}
       </div>

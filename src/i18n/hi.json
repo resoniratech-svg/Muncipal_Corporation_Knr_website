@@ -6,6 +6,7 @@
     "next": "आगे",
     "close": "बंद करें",
     "cancel": "रद्द करें",
+    "save": "सुरक्षित करें",
     "ward": "वार्ड",
     "language": "भाषा",
     "textSize": "अक्षर का आकार",
@@ -23,6 +24,45 @@
     "fixed": "ठीक हो गया",
     "delayed": "देरी",
     "reopened": "फिर से खोला गया"
+  },
+  "qa": {
+    "resolvedGrievances": "समाधान की गई शिकायतों का ऑडिट मैट्रिक्स",
+    "resolvedIssues": "समाधान किए गए मुद्दे",
+    "open": "खोलें",
+    "reviewerChecked": "समीक्षक द्वारा जाँचा गया",
+    "assignmentDetails": "हलकर्ता एवं सौंपा गया स्टाफ",
+    "beforePhoto": "कार्य-पूर्व फोटो",
+    "afterPhoto": "कार्य-पश्चात फोटो",
+    "markAllAudited": "सभी को जाँचा गया चिह्नित करें",
+    "reset": "रीसेट करें",
+    "audited": "जाँचा गया",
+    "reviewComplete": "समीक्षा पूर्ण",
+    "reviewCompleteAudited": "✓ समीक्षा पूर्ण (जाँचा गया)",
+    "photosAvailable": "कार्य-पूर्व एवं कार्य-पश्चात फोटो उपलब्ध"
+  },
+  "grievance": {
+    "status": {
+      "pending": "प्रतीक्षारत",
+      "inProgress": "प्रगति पर है",
+      "completed": "पूर्ण",
+      "resolved": "समाधान",
+      "overdue": "विलंबित",
+      "reopened": "पुनः खोला गया"
+    },
+    "category": {
+      "drainage": "नाली",
+      "roads": "सड़कें",
+      "garbage": "कचरा",
+      "light": "स्ट्रीट लाइट",
+      "water": "जल आपूर्ति",
+      "other": "अन्य"
+    }
+  },
+  "staff": {
+    "assign": "स्टाफ को सौंपें",
+    "reassign": "स्टाफ बदलें",
+    "assignedStaff": "सौंपा गया स्टाफ",
+    "fieldStaff": "फ़ील्ड स्टाफ"
   },
   "home": {
     "hello": "नमस्ते, {name}",

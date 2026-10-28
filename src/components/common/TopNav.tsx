@@ -234,12 +234,12 @@ export const TopNav: React.FC = () => {
                       )}
                       {currentUser.assignedWardName && (
                         <p className="text-xs text-slate-600 mt-2">
-                          Assigned ward: <strong className="text-slate-900">{currentUser.assignedWardName}</strong>
+                          {t('Assigned ward:')} <strong className="text-slate-900">{t(currentUser.assignedWardName)}</strong>
                         </p>
                       )}
                       {currentUser.departmentName && (
                         <p className="text-xs text-slate-600 mt-1">
-                          Department: <strong className="text-slate-900">{currentUser.departmentName}</strong>
+                          {t('Department:')} <strong className="text-slate-900">{t(currentUser.departmentName)}</strong>
                         </p>
                       )}
                     </div>

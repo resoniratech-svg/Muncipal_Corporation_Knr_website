@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import kmcLogo from '../../assets/kmc-logo.svg';
 import { Home, Grid, Bell, User, Wifi, Battery, Signal } from 'lucide-react';
+import { usePrefs } from '../../i18n';
 
 interface PhoneFrameProps {
   title?: string;
@@ -19,6 +20,7 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
   className = '',
   showHeader = true,
 }) => {
+  const { t } = usePrefs();
   const [currentTab, setCurrentTab] = useState(activeTab);
 
   const handleTabClick = (tab: 'home' | 'services' | 'alerts' | 'profile') => {
@@ -51,12 +53,12 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
             <div className="flex items-center gap-2">
               <img src={kmcLogo} alt="KMC" className="w-6 h-6 object-contain" />
               <div>
-                <h4 className="text-xs font-bold font-heading uppercase tracking-wide leading-none">{title}</h4>
-                <p className="text-[11px] text-amber-300">Citizen Governance Portal</p>
+                <h4 className="text-xs font-bold font-heading uppercase tracking-wide leading-none">{t(title)}</h4>
+                <p className="text-[11px] text-amber-300">{t('Citizen Governance Portal')}</p>
               </div>
             </div>
             <div className="text-[11px] bg-kmc-green px-2 py-0.5 rounded-full text-white font-semibold">
-              Live
+              {t('Live')}
             </div>
           </div>
         )}
@@ -73,14 +75,14 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
             className={`flex flex-col items-center gap-0.5 ${currentTab === 'home' ? 'text-kmc-navy font-bold' : 'text-slate-400 hover:text-slate-600'}`}
           >
             <Home className="w-4 h-4" />
-            <span className="text-[11px]">Home</span>
+            <span className="text-[11px]">{t('Home')}</span>
           </button>
           <button
             onClick={() => handleTabClick('services')}
             className={`flex flex-col items-center gap-0.5 ${currentTab === 'services' ? 'text-kmc-navy font-bold' : 'text-slate-400 hover:text-slate-600'}`}
           >
             <Grid className="w-4 h-4" />
-            <span className="text-[11px]">Services</span>
+            <span className="text-[11px]">{t('Services')}</span>
           </button>
           <button
             onClick={() => handleTabClick('alerts')}
@@ -90,14 +92,14 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
               <Bell className="w-4 h-4" />
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500"></span>
             </div>
-            <span className="text-[11px]">Alerts</span>
+            <span className="text-[11px]">{t('Alerts')}</span>
           </button>
           <button
             onClick={() => handleTabClick('profile')}
             className={`flex flex-col items-center gap-0.5 ${currentTab === 'profile' ? 'text-kmc-navy font-bold' : 'text-slate-400 hover:text-slate-600'}`}
           >
             <User className="w-4 h-4" />
-            <span className="text-[11px]">Profile</span>
+            <span className="text-[11px]">{t('Profile')}</span>
           </button>
         </div>
 

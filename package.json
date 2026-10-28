@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "node tests/run-audit.mjs && node tests/test-cross-ward-photo-e2e.mjs && node tests/test-ward-staff-isolation.mjs && node tests/test-staff-categories.mjs && node tests/test-grievance-staff-assignment.mjs && node tests/test-translations.mjs && node tests/test-localization-audit.mjs && node tests/test-image-preview.mjs && node tests/test-user-management-workflow.mjs && node tests/test-authentic-photos-workflow.mjs && node tests/test-qa-inspection-workflow.mjs && node tests/test-department-ward-category-workflow.mjs"
+    "test": "node tests/run-audit.mjs && node tests/test-cross-ward-photo-e2e.mjs && node tests/test-ward-staff-isolation.mjs && node tests/test-staff-categories.mjs && node tests/test-grievance-staff-assignment.mjs && node tests/test-translations.mjs && node tests/test-localization-audit.mjs && node tests/test-image-preview.mjs && node tests/test-user-management-workflow.mjs && node tests/test-authentic-photos-workflow.mjs && node tests/test-qa-inspection-workflow.mjs && node tests/test-department-ward-category-workflow.mjs && node tests/test-complete-localization.mjs && node tests/test-login-page-redesign.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

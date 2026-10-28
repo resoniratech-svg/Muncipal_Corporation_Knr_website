@@ -7,6 +7,7 @@ import { makeEvidence } from '../photos/photoStore';
 import { wardCoords } from '../photos/geo';
 import { useTour } from './Tour';
 import { useToast } from './Toast';
+import { usePrefs } from '../i18n';
 
 interface QuickDemoContextType {
   running: boolean;
@@ -27,6 +28,7 @@ const scrollTo = (selector: string) =>
  */
 export const QuickDemoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
+  const { t } = usePrefs();
   const app = useApp();
   const appRef = useRef(app);
   appRef.current = app;
@@ -130,11 +132,11 @@ export const QuickDemoProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
             <PlayCircle className="w-6 h-6 shrink-0" aria-hidden="true" />
             <p className="flex-1 text-base font-semibold">
-              <span className="font-bold">Quick Demo {step.n} of {TOTAL_STEPS}:</span> {step.text}
+              <span className="font-bold">{t('Quick Demo')} {step.n} / {TOTAL_STEPS}:</span> {t(step.text)}
             </p>
             <button type="button" onClick={stop} className="min-h-[44px] px-4 rounded-lg bg-slate-950 text-white text-base font-bold flex items-center gap-2">
               <Square className="w-4 h-4" aria-hidden="true" />
-              Stop
+              {t('Stop')}
             </button>
           </div>
         </div>

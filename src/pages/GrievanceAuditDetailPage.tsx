@@ -220,7 +220,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
                 {t('QA Inspection Mode Active')}
               </span>
               <span className="text-xs font-bold text-slate-950">
-                Auditor: {currentUser?.displayName || 'Dr. T. Radhakrishnan (Governance Auditor)'}
+                {t('Auditor')}: {t(currentUser?.displayName || 'Dr. T. Radhakrishnan (Governance Auditor)')}
               </span>
             </div>
             <p className="text-xs text-slate-900 font-medium">
@@ -285,7 +285,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
                   {t(grievance.category)}
                 </span>
                 <span className="text-xs font-bold bg-amber-50 text-amber-900 px-2.5 py-0.5 rounded border border-amber-200">
-                  Ward {grievance.wardId} • {ward?.name || 'Local Ward'}
+                  {t(`Ward ${grievance.wardId}`)} • {t(ward?.name || 'Local Ward')}
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-bold font-heading text-slate-900 mt-2">
@@ -314,11 +314,11 @@ export const GrievanceAuditDetailPage: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
               <span className="block text-[10px] font-bold uppercase text-slate-500">{t('Citizen Reported Date')}</span>
-              <span className="font-semibold text-slate-800 mt-0.5 block">{grievance.reportedOn}</span>
+              <span className="font-semibold text-slate-800 mt-0.5 block">{t(grievance.reportedOn)}</span>
             </div>
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
               <span className="block text-[10px] font-bold uppercase text-slate-500">{t('Reporting Resident')}</span>
-              <span className="font-semibold text-slate-800 mt-0.5 block">{grievance.citizenId ? 'Sri. P. Rajesh Kumar' : 'Resident Citizen'}</span>
+              <span className="font-semibold text-slate-800 mt-0.5 block">{t(grievance.citizenId ? 'Sri. P. Rajesh Kumar' : 'Resident Citizen')}</span>
             </div>
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
               <span className="block text-[10px] font-bold uppercase text-slate-500">{t('Department')}</span>
@@ -344,24 +344,24 @@ export const GrievanceAuditDetailPage: React.FC = () => {
             <dl className="divide-y divide-slate-100 text-xs">
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Ward Number')}:</dt>
-                <dd className="font-bold text-slate-900">Ward {grievance.wardId}</dd>
+                <dd className="font-bold text-slate-900">{t(`Ward ${grievance.wardId}`)}</dd>
               </div>
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Ward Name')}:</dt>
-                <dd className="font-bold text-slate-900">{ward?.name || 'Local Ward'}</dd>
+                <dd className="font-bold text-slate-900">{t(ward?.name || 'Local Ward')}</dd>
               </div>
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Locality / Landmark')}:</dt>
-                <dd className="font-semibold text-slate-800">{grievance.location}</dd>
+                <dd className="font-semibold text-slate-800">{t(grievance.location)}</dd>
               </div>
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Municipal Scope')}:</dt>
-                <dd className="text-slate-700">Karimnagar Municipal Corporation (66 Wards)</dd>
+                <dd className="text-slate-700">{t('Karimnagar Municipal Corporation (66 Wards)')}</dd>
               </div>
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Assigned Corporator')}:</dt>
                 <dd className="font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded">
-                  {ward?.corporator || 'Ward Corporator'}
+                  {t(ward?.corporator || 'Ward Corporator')}
                 </dd>
               </div>
             </dl>
@@ -378,31 +378,31 @@ export const GrievanceAuditDetailPage: React.FC = () => {
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Assigned Field Staff (Solved By)')}:</dt>
                 <dd className="font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">
-                  {grievance.assignedTo || associatedTask?.assignedTo || t('Mahesh (Field Staff)')}
+                  {t(grievance.assignedTo || associatedTask?.assignedTo || 'Mahesh (Field Staff)')}
                 </dd>
               </div>
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Staff Work Category')}:</dt>
                 <dd className="font-semibold text-slate-800">
-                  {associatedTask?.role || grievance.requiredStaffCategory || t('Drainage & Culvert Worker')}
+                  {t(associatedTask?.role || grievance.requiredStaffCategory || 'Drainage & Culvert Worker')}
                 </dd>
               </div>
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Assignment Date & Time')}:</dt>
                 <dd className="font-semibold text-slate-800">
-                  {workStartEvent?.time || associatedTask?.createdAt || grievance.reportedOn}
+                  {t(workStartEvent?.time || associatedTask?.createdAt || grievance.reportedOn)}
                 </dd>
               </div>
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Ground Completion Time')}:</dt>
                 <dd className="font-bold text-emerald-800">
-                  {workCompletedEvent?.time || (isResolved ? grievance.reportedOn : t('Completed on ground'))}
+                  {t(workCompletedEvent?.time || (isResolved ? grievance.reportedOn : 'Completed on ground'))}
                 </dd>
               </div>
               <div className="py-2 flex flex-col gap-1">
                 <dt className="text-slate-500">{t('Work Execution Notes')}:</dt>
                 <dd className="font-medium text-slate-800 bg-slate-50 p-2 rounded border border-slate-200">
-                  {workCompletedEvent?.note || associatedTask?.notes || t('Desilting and cover replacement completed with before-and-after photographic verification.')}
+                  {t(workCompletedEvent?.note || associatedTask?.notes || 'Desilting and cover replacement completed with before-and-after photographic verification.')}
                 </dd>
               </div>
             </dl>
@@ -422,7 +422,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Corporator Name')}:</dt>
                 <dd className="font-bold text-slate-900">
-                  {ward?.corporator || 'Sri. K. Ramesh Rao'}
+                  {t(ward?.corporator || 'Sri. K. Ramesh Rao')}
                 </dd>
               </div>
               <div className="py-2 flex justify-between">
@@ -434,7 +434,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Verification Outcome')}:</dt>
                 <dd className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  {resolutionEvent?.title || t('Approved & Closed')}
+                  {t(resolutionEvent?.title || 'Approved & Closed')}
                 </dd>
               </div>
             </dl>
@@ -443,7 +443,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
               <div className="py-2 flex justify-between">
                 <dt className="text-slate-500">{t('Sign-off Timestamp')}:</dt>
                 <dd className="font-bold text-slate-900">
-                  {resolutionEvent?.time || t('17 May 2024, 05:00 PM')}
+                  {t(resolutionEvent?.time || '17 May 2024, 05:00 PM')}
                 </dd>
               </div>
               <div className="py-2 flex justify-between">
@@ -455,7 +455,7 @@ export const GrievanceAuditDetailPage: React.FC = () => {
               <div className="py-2 flex flex-col gap-1">
                 <dt className="text-slate-500">{t('Corporator Approval Note')}:</dt>
                 <dd className="font-medium text-slate-800 bg-slate-50 p-2 rounded border border-slate-200">
-                  {resolutionEvent?.note || `${ward?.corporator || 'Corporator'} compared the before and after photos and closed the complaint.`}
+                  {t(resolutionEvent?.note || 'Corporator compared before/after photos and closed the complaint')}
                 </dd>
               </div>
             </dl>
@@ -484,8 +484,8 @@ export const GrievanceAuditDetailPage: React.FC = () => {
               {isReviewed && reviewState?.timestamp && (
                 <p className="text-[11px] font-mono text-emerald-800 font-bold mt-2">
                   ✓ {t('Audited by {{reviewer}} on {{time}}', {
-                    reviewer: reviewState.reviewer,
-                    time: new Date(reviewState.timestamp).toLocaleString(),
+                    reviewer: t(reviewState.reviewer),
+                    time: new Date(reviewState.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                   })}
                 </p>
               )}
@@ -543,14 +543,14 @@ export const GrievanceAuditDetailPage: React.FC = () => {
                 <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-3 text-xs space-y-1">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <span className="font-bold text-slate-900 text-xs uppercase tracking-wide">
-                      {event.title}
+                      {t(event.title)}
                     </span>
                     <span className="font-mono text-[11px] text-slate-500 font-semibold bg-white px-2 py-0.5 rounded border border-slate-200">
-                      {event.time}
+                      {t(event.time)}
                     </span>
                   </div>
                   <p className="text-slate-600 leading-relaxed">
-                    {event.note}
+                    {t(event.note)}
                   </p>
                 </div>
               </li>

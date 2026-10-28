@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Ward } from '../../data/wards';
+import { usePrefs } from '../../i18n';
 
 interface WardMapSvgProps {
   onWardSelect?: (wardId: number) => void;
@@ -11,6 +12,7 @@ interface WardMapSvgProps {
 
 export const WardMapSvg: React.FC<WardMapSvgProps> = ({ onWardSelect, selectedWardId, compact = false }) => {
   const { wards, activeWardId, setActiveWardId } = useApp();
+  const { t } = usePrefs();
   const [hoveredWard, setHoveredWard] = useState<Ward | null>(null);
 
   const currentSelected = selectedWardId !== undefined ? selectedWardId : activeWardId;
@@ -35,10 +37,10 @@ export const WardMapSvg: React.FC<WardMapSvgProps> = ({ onWardSelect, selectedWa
       <div className={`flex flex-col ${compact ? '' : 'sm:flex-row sm:items-center'} justify-between pb-3 mb-3 border-b border-slate-100 gap-2`}>
         <div>
           <h4 className="text-sm font-bold font-heading uppercase text-slate-800">
-            Karimnagar City Ward Heat-Map (66 Wards)
+            {t('Karimnagar City Ward Heat-Map (66 Wards)')}
           </h4>
           <p className="text-xs text-slate-500">
-            Click any ward to drill-down into ward metrics & active grievances
+            {t('Click any ward to drill-down into ward metrics & active grievances')}
           </p>
         </div>
 
@@ -46,19 +48,19 @@ export const WardMapSvg: React.FC<WardMapSvgProps> = ({ onWardSelect, selectedWa
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <span className="flex items-center gap-1 font-medium text-slate-700">
             <span className="w-2.5 h-2.5 rounded bg-[#2E7D32]"></span>
-            Excellent (80-100%)
+            {t('Excellent (80-100%)')}
           </span>
           <span className="flex items-center gap-1 font-medium text-slate-700">
             <span className="w-2.5 h-2.5 rounded bg-[#0288D1]"></span>
-            Good (60-79%)
+            {t('Good (60-79%)')}
           </span>
           <span className="flex items-center gap-1 font-medium text-slate-700">
             <span className="w-2.5 h-2.5 rounded bg-[#F57C00]"></span>
-            Average (40-59%)
+            {t('Average (40-59%)')}
           </span>
           <span className="flex items-center gap-1 font-medium text-slate-700">
             <span className="w-2.5 h-2.5 rounded bg-[#D32F2F]"></span>
-            Poor (0-39%)
+            {t('Poor (0-39%)')}
           </span>
         </div>
       </div>
@@ -155,16 +157,16 @@ export const WardMapSvg: React.FC<WardMapSvgProps> = ({ onWardSelect, selectedWa
       <div className="mt-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs gap-2">
         <div className="flex items-center gap-3">
           <span className="font-bold text-kmc-navy font-heading text-sm">
-            Selected: Ward {currentSelected} – {wards.find(w => w.id === currentSelected)?.name}
+            {t('Selected:')} {t('Ward')} {currentSelected} – {t(wards.find(w => w.id === currentSelected)?.name || '')}
           </span>
           <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-semibold text-[11px]">
-            Score: {wards.find(w => w.id === currentSelected)?.score}/100 ({wards.find(w => w.id === currentSelected)?.level})
+            {t('Score')}: {wards.find(w => w.id === currentSelected)?.score}/100 ({t(wards.find(w => w.id === currentSelected)?.level || '')})
           </span>
         </div>
         <div className="flex items-center gap-4 text-slate-600">
-          <span>Complaints: <strong>{wards.find(w => w.id === currentSelected)?.totalComplaints}</strong></span>
-          <span>Pending: <strong className="text-amber-700">{wards.find(w => w.id === currentSelected)?.pendingComplaints}</strong></span>
-          <span>Resolved: <strong className="text-emerald-700">{wards.find(w => w.id === currentSelected)?.completedComplaints}</strong></span>
+          <span>{t('Complaints:')} <strong>{wards.find(w => w.id === currentSelected)?.totalComplaints}</strong></span>
+          <span>{t('Pending:')} <strong className="text-amber-700">{wards.find(w => w.id === currentSelected)?.pendingComplaints}</strong></span>
+          <span>{t('Resolved:')} <strong className="text-emerald-700">{wards.find(w => w.id === currentSelected)?.completedComplaints}</strong></span>
         </div>
       </div>
       </>

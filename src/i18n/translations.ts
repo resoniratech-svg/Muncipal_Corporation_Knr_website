@@ -3,6 +3,7 @@ export type Lang = 'en' | 'te' | 'hi';
 import { IMPLEMENTATION_TRANSLATIONS } from './locales/implementationTranslations.ts';
 import { DECK_TRANSLATIONS } from './locales/deckTranslations.ts';
 import { PAGES_TRANSLATIONS } from './locales/pagesTranslations.ts';
+import { AUDIT_TRANSLATIONS } from './locales/platformAuditTranslations.ts';
 
 export const PLATFORM_TRANSLATIONS: Record<Lang, Record<string, string>> = {
   en: {},
@@ -484,6 +485,7 @@ export const PLATFORM_TRANSLATIONS: Record<Lang, Record<string, string>> = {
     ...DECK_TRANSLATIONS.te,
     ...IMPLEMENTATION_TRANSLATIONS.te,
     ...PAGES_TRANSLATIONS.te,
+    ...AUDIT_TRANSLATIONS.te,
   },
   hi: {
     // Brand & Platform Header
@@ -963,5 +965,6 @@ export const PLATFORM_TRANSLATIONS: Record<Lang, Record<string, string>> = {
     ...DECK_TRANSLATIONS.hi,
     ...IMPLEMENTATION_TRANSLATIONS.hi,
     ...PAGES_TRANSLATIONS.hi,
+    ...AUDIT_TRANSLATIONS.hi,
   },
 };
