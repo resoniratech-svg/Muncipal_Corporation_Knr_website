@@ -12,6 +12,9 @@ import { useAuth } from '../auth/AuthContext';
 import { GrievanceItem } from '../data/grievances';
 import { Laptop, Smartphone } from 'lucide-react';
 import { usePrefs } from '../i18n';
+import { MobileReportFlow } from '../components/citizen/mobile/MobileReportFlow';
+import { MobileTrackFlow } from '../components/citizen/mobile/MobileTrackFlow';
+import { MobileDetailFlow } from '../components/citizen/mobile/MobileDetailFlow';
 
 export const CitizenPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +22,12 @@ export const CitizenPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { t } = usePrefs();
   const [activeView, setActiveView] = useState<'portal' | 'mobile'>('portal');
+
+  // In-frame mobile state for strictly self-contained smartphone experience
+  const [mobileScreen, setMobileScreen] = useState<'home' | 'report' | 'track' | 'detail'>('home');
+  const [mobileGrievanceId, setMobileGrievanceId] = useState<string | null>(null);
+  const [reportInitialCategory, setReportInitialCategory] = useState<string | null>(null);
+  const [phoneTab, setPhoneTab] = useState<'home' | 'services' | 'alerts' | 'profile'>('home');
 
   // Strict citizen isolation: Citizen sees ONLY records matching their citizenId
   const citizenGrievances = grievances.filter(g => {
@@ -104,12 +113,112 @@ export const CitizenPage: React.FC = () => {
               </p>
             </div>
 
-            <PhoneFrame>
-              <div className="space-y-3">
-                <button type="button" onClick={() => navigate('/citizen/report')} className="w-full min-h-[52px] rounded-xl bg-kmc-navy text-white text-base font-bold">{t("Report a Problem")}</button>
-                <button type="button" onClick={() => navigate('/citizen/track')} className="w-full min-h-[52px] rounded-xl border-2 border-kmc-navy text-kmc-navy text-base font-bold">{t("Track My Complaint")}</button>
-                <SmsMessageFeed />
-              </div>
+            <PhoneFrame
+              activeTab={phoneTab}
+              onTabChange={(tab) => {
+                setPhoneTab(tab);
+                if (tab === 'home') {
+                  setMobileScreen('home');
+                }
+              }}
+              title={
+                mobileScreen === 'report'
+                  ? 'Report a Problem'
+                  : mobileScreen === 'track'
+                  ? 'Track My Complaint'
+                  : mobileScreen === 'detail'
+                  ? 'Complaint Details'
+                  : undefined
+              }
+              subtitle={
+                mobileScreen === 'report'
+                  ? 'Civic Issue Registration'
+                  : mobileScreen === 'track'
+                  ? 'My Registered Grievances'
+                  : mobileScreen === 'detail'
+                  ? (mobileGrievanceId || undefined)
+                  : undefined
+              }
+              onBackClick={
+                mobileScreen !== 'home'
+                  ? () => {
+                      if (mobileScreen === 'detail') {
+                        setMobileScreen('track');
+                      } else {
+                        setMobileScreen('home');
+                      }
+                    }
+                  : undefined
+              }
+              headerBackText={mobileScreen === 'detail' ? t('Complaints') : t('Home')}
+              onReportClick={(cat) => {
+                setPhoneTab('home');
+                setReportInitialCategory(cat || null);
+                setMobileScreen('report');
+              }}
+              onTrackClick={(id) => {
+                setPhoneTab('home');
+                if (id) setMobileGrievanceId(id);
+                setMobileScreen(id ? 'detail' : 'track');
+              }}
+            >
+              {mobileScreen === 'report' ? (
+                <MobileReportFlow
+                  initialCategory={reportInitialCategory}
+                  onDone={() => setMobileScreen('home')}
+                  onTrackCreated={(id) => {
+                    setMobileGrievanceId(id);
+                    setMobileScreen('detail');
+                  }}
+                  onCancel={() => setMobileScreen('home')}
+                />
+              ) : mobileScreen === 'track' ? (
+                <MobileTrackFlow
+                  onSelectGrievance={(id) => {
+                    setMobileGrievanceId(id);
+                    setMobileScreen('detail');
+                  }}
+                  onReportNew={() => {
+                    setReportInitialCategory(null);
+                    setMobileScreen('report');
+                  }}
+                  onBack={() => setMobileScreen('home')}
+                />
+              ) : mobileScreen === 'detail' ? (
+                <MobileDetailFlow
+                  grievanceId={mobileGrievanceId || 'GRV2024-00234'}
+                  onBack={() => setMobileScreen('track')}
+                  onHome={() => setMobileScreen('home')}
+                />
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReportInitialCategory(null);
+                      setMobileScreen('report');
+                    }}
+                    className="w-full min-h-[52px] rounded-xl bg-kmc-navy text-white text-base font-bold shadow-md hover:bg-kmc-navy-light transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>{t("Report a Problem")}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setMobileScreen('track')}
+                    className="w-full min-h-[52px] rounded-xl border-2 border-kmc-navy text-kmc-navy text-base font-bold hover:bg-blue-50/50 transition-all flex items-center justify-center gap-2 bg-white"
+                  >
+                    <span>{t("Track My Complaint")}</span>
+                  </button>
+
+                  <SmsMessageFeed
+                    onSelectGrievance={(id) => {
+                      setMobileGrievanceId(id);
+                      setMobileScreen('detail');
+                    }}
+                  />
+                </div>
+              )}
             </PhoneFrame>
           </div>
         ) : (

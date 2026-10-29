@@ -6,7 +6,7 @@ import {
   Search, Droplet, Zap, Trash2, Waves, Wrench, Building2,
   BarChart3, CreditCard, FileText, ChevronRight, CheckCircle2,
   Clock, AlertTriangle, ShieldCheck, Phone, LogOut, Check,
-  ExternalLink, ArrowRight,
+  ExternalLink, ArrowRight, ChevronLeft,
 } from 'lucide-react';
 import { usePrefs, LANGUAGES, Lang } from '../../i18n';
 import { useAuth } from '../../auth/AuthContext';
@@ -14,20 +14,30 @@ import { useApp } from '../../context/AppContext';
 
 interface PhoneFrameProps {
   title?: string;
+  subtitle?: string;
   children: React.ReactNode;
   activeTab?: 'home' | 'services' | 'alerts' | 'profile';
   onTabChange?: (tab: 'home' | 'services' | 'alerts' | 'profile') => void;
   className?: string;
   showHeader?: boolean;
+  onReportClick?: (category?: string) => void;
+  onTrackClick?: (grievanceId?: string) => void;
+  onBackClick?: () => void;
+  headerBackText?: string;
 }
 
 export const PhoneFrame: React.FC<PhoneFrameProps> = ({
   title = "My Karimnagar",
+  subtitle,
   children,
   activeTab = 'home',
   onTabChange,
   className = '',
   showHeader = true,
+  onReportClick,
+  onTrackClick,
+  onBackClick,
+  headerBackText,
 }) => {
   const navigate = useNavigate();
   const { t, lang, setLang } = usePrefs();
@@ -212,6 +222,7 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
 
   // Dynamic header title according to active tab
   const getHeaderTitle = () => {
+    if (title && title !== 'My Karimnagar') return t(title);
     switch (currentTab) {
       case 'services':
         return t('Municipal Civic Services');
@@ -226,6 +237,7 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
   };
 
   const getHeaderSubtitle = () => {
+    if (subtitle) return t(subtitle);
     switch (currentTab) {
       case 'services':
         return t('Ward 27 – Green Park Colony');
@@ -262,7 +274,19 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
         {showHeader && (
           <div className="bg-kmc-navy text-white px-4 py-2.5 flex items-center justify-between border-b border-kmc-navy-light shrink-0">
             <div className="flex items-center gap-2 min-w-0">
-              <img src={kmcLogo} alt="KMC" className="w-6 h-6 object-contain shrink-0" />
+              {onBackClick ? (
+                <button
+                  type="button"
+                  onClick={onBackClick}
+                  className="p-1 -ml-1 hover:bg-white/10 rounded-lg text-amber-300 flex items-center gap-1 font-bold text-xs shrink-0 transition-colors"
+                  title="Back"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="text-[11px]">{headerBackText || t('Back')}</span>
+                </button>
+              ) : (
+                <img src={kmcLogo} alt="KMC" className="w-6 h-6 object-contain shrink-0" />
+              )}
               <div className="min-w-0">
                 <h4 className="text-xs font-bold font-heading uppercase tracking-wide leading-none truncate">
                   {getHeaderTitle()}
@@ -318,7 +342,13 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate('/citizen/report')}
+                  onClick={() => {
+                    if (onReportClick) {
+                      onReportClick();
+                    } else {
+                      navigate('/citizen/report');
+                    }
+                  }}
                   className="px-3 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl shrink-0 shadow flex items-center gap-1"
                 >
                   <span>{t('Report')}</span>
@@ -342,6 +372,8 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
                         onClick={() => {
                           if (srv.route) {
                             navigate(srv.route);
+                          } else if (onReportClick) {
+                            onReportClick(srv.category || srv.title);
                           } else {
                             navigate('/citizen/report');
                           }
@@ -446,7 +478,13 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
                         <div className="pt-1">
                           <button
                             type="button"
-                            onClick={() => alt.actionRoute && navigate(alt.actionRoute)}
+                            onClick={() => {
+                              if (onTrackClick) {
+                                onTrackClick('GRV2024-00234');
+                              } else if (alt.actionRoute) {
+                                navigate(alt.actionRoute);
+                              }
+                            }}
                             className="text-xs font-bold text-kmc-navy hover:underline flex items-center gap-1"
                           >
                             <span>{alt.actionText}</span>
