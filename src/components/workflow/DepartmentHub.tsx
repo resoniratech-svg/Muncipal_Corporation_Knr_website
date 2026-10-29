@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import kmcLogo from '../../assets/kmc-logo.svg';
 import { DEPARTMENTS, DepartmentInfo } from '../../data/departments';
-import { Droplet, Hammer, Trash2, Zap, Building, Banknote, HeartPulse, Laptop } from 'lucide-react';
+import { Droplet, Hammer, Trash2, Zap, Building, Banknote, HeartPulse, Laptop, FileText } from 'lucide-react';
 import { usePrefs } from '../../i18n';
 
 const ICONS: Record<string, React.ReactNode> = {
-  'water-supply': <Droplet className="w-5 h-5" />,
-  'engineering': <Hammer className="w-5 h-5" />,
-  'sanitation': <Trash2 className="w-5 h-5" />,
-  'electrical': <Zap className="w-5 h-5" />,
-  'town-planning': <Building className="w-5 h-5" />,
+  'establishment': <Building className="w-5 h-5" />,
   'revenue': <Banknote className="w-5 h-5" />,
+  'engineering': <Hammer className="w-5 h-5" />,
+  'town-planning': <Building className="w-5 h-5" />,
+  'sanitation': <Trash2 className="w-5 h-5" />,
+  'statistics': <FileText className="w-5 h-5" />,
+  'urban-welfare': <HeartPulse className="w-5 h-5" />,
+  'water-supply': <Droplet className="w-5 h-5" />,
+  'electrical': <Zap className="w-5 h-5" />,
   'health': <HeartPulse className="w-5 h-5" />,
   'it-data': <Laptop className="w-5 h-5" />,
 };
@@ -26,10 +29,10 @@ export const DepartmentHub: React.FC = () => {
           {t("Integrated Departmental Workflow")}
         </span>
         <h3 className="text-lg sm:text-xl font-bold font-heading text-slate-800 uppercase mt-2">
-          {t("8 Municipal Departments Digitally Connected")}
+          {t("7 Core MCK Departments Digitally Connected")}
         </h3>
         <p className="text-xs text-slate-500 max-w-xl mx-auto mt-1">
-          {t("Operating within a single digital ecosystem to eliminate silos, standardize workflows, and enforce accountability.")}
+          {t("Operating within a single digital ecosystem across the 7 Core Administrative Sections of Karimnagar Municipal Corporation to eliminate silos, standardize workflows, and enforce accountability.")}
         </p>
       </div>
 

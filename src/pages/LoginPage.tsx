@@ -77,9 +77,16 @@ export const LoginPage: React.FC = () => {
       const items = Object.entries(allDemoUsers)
         .filter(([_, rec]) => cfg.roles.includes(rec.user.role))
         .map(([k, rec]) => {
-          const badge = ROLE_DISPLAY_NAMES[rec.user.role];
-          const roleClean = badge ? badge.title.replace(/\s*\(.*\)$/, '') : rec.user.role;
-          return { key: k, record: rec, badgeTitle: roleClean };
+          let badgeTitle = rec.user.roleTitle || rec.user.role;
+          if (rec.user.role === 'department_officer') {
+            badgeTitle = rec.user.roleTitle || 'Department Officer';
+          } else if (rec.user.role === 'field_staff') {
+            badgeTitle = rec.user.roleTitle || 'Field Staff';
+          } else {
+            const badge = ROLE_DISPLAY_NAMES[rec.user.role];
+            badgeTitle = badge ? badge.title.replace(/\s*\(.*\)$/, '') : rec.user.role;
+          }
+          return { key: k, record: rec, badgeTitle };
         });
 
       if (items.length > 0) {
@@ -221,7 +228,11 @@ export const LoginPage: React.FC = () => {
   // Selected account details for the closed dropdown button
   const selectedRecord = selectedDemoKey ? allDemoUsers[selectedDemoKey] : null;
   const selectedBadge = selectedRecord ? ROLE_DISPLAY_NAMES[selectedRecord.user.role] : null;
-  const selectedRoleClean = selectedBadge ? selectedBadge.title.replace(/\s*\(.*\)$/, '') : selectedRecord?.user.role;
+  const selectedRoleClean = selectedRecord
+    ? (selectedRecord.user.role === 'department_officer' || selectedRecord.user.role === 'field_staff'
+        ? selectedRecord.user.roleTitle || selectedBadge?.title.replace(/\s*\(.*\)$/, '')
+        : selectedBadge?.title.replace(/\s*\(.*\)$/, '') || selectedRecord.user.role)
+    : '';
   const selectedBadgeStyle = selectedRecord ? ROLE_BADGE[selectedRecord.user.role] : null;
 
   return (

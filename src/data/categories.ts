@@ -16,12 +16,12 @@ export interface ProblemCategory {
 }
 
 export const PROBLEM_CATEGORIES: ProblemCategory[] = [
-  { key: 'drainage', category: 'Drainage', department: 'Engineering', slaHours: 72, icon: Waves, demoBefore: 'images/field-evidence/drain-before.jpg', demoAfter: 'images/field-evidence/drain-after.jpg' },
-  { key: 'roads', category: 'Roads', department: 'Engineering', slaHours: 72, icon: Construction, demoBefore: 'images/field-evidence/road-before.jpg', demoAfter: 'images/field-evidence/road-after.jpg' },
-  { key: 'garbage', category: 'Garbage', department: 'Sanitation', slaHours: 48, icon: Trash2, demoBefore: 'images/sanitation/sanitation-collection.jpg', demoAfter: 'images/field-evidence/sanitation-work.jpg' },
-  { key: 'light', category: 'Street Lights', department: 'Electrical', slaHours: 48, icon: Lightbulb, demoBefore: 'images/civic-works/street-lighting.jpg', demoAfter: 'images/field-evidence/street-lights-fixed.jpg' },
-  { key: 'water', category: 'Water Supply', department: 'Water Supply', slaHours: 24, icon: Droplet, demoBefore: 'images/field-evidence/water-before.jpg', demoAfter: 'images/field-evidence/water-after.jpg' },
-  { key: 'other', category: 'Other', department: 'Engineering', slaHours: 72, icon: CircleEllipsis, demoBefore: 'images/field-evidence/park-beautification.jpg', demoAfter: 'images/parks-projects/urban-park.jpg' },
+  { key: 'drainage', category: 'Drainage', department: 'Engineering Section', slaHours: 72, icon: Waves, demoBefore: 'images/field-evidence/drain-before.jpg', demoAfter: 'images/field-evidence/drain-after.jpg' },
+  { key: 'roads', category: 'Roads', department: 'Engineering Section', slaHours: 72, icon: Construction, demoBefore: 'images/field-evidence/road-before.jpg', demoAfter: 'images/field-evidence/road-after.jpg' },
+  { key: 'garbage', category: 'Garbage', department: 'Sanitation Section', slaHours: 48, icon: Trash2, demoBefore: 'images/sanitation/sanitation-collection.jpg', demoAfter: 'images/field-evidence/sanitation-work.jpg' },
+  { key: 'light', category: 'Street Lights', department: 'Engineering Section', slaHours: 48, icon: Lightbulb, demoBefore: 'images/civic-works/street-lighting.jpg', demoAfter: 'images/field-evidence/street-lights-fixed.jpg' },
+  { key: 'water', category: 'Water Supply', department: 'Engineering Section', slaHours: 24, icon: Droplet, demoBefore: 'images/field-evidence/water-before.jpg', demoAfter: 'images/field-evidence/water-after.jpg' },
+  { key: 'other', category: 'Other', department: 'Engineering Section', slaHours: 72, icon: CircleEllipsis, demoBefore: 'images/field-evidence/park-beautification.jpg', demoAfter: 'images/parks-projects/urban-park.jpg' },
 ];
 
 /** Maps any stored category name (including older seed names) to one of the six tiles. */

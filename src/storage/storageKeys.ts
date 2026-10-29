@@ -23,5 +23,5 @@ export const STORAGE_KEYS = {
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
 
-export const CURRENT_SCHEMA_VERSION = '1.5.0';
+export const CURRENT_SCHEMA_VERSION = '1.6.0';
 export const STORAGE_EVENT_NAME = 'kmc:storage_changed';

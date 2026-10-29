@@ -23,7 +23,33 @@ const parkAfter = 'images/parks-projects/urban-park.jpg';
  * Reopened     → citizen said "Not solved"; escalated one level up the ladder
  */
 export type GrievanceStatus = 'Pending' | 'In Progress' | 'Completed' | 'Resolved' | 'Overdue' | 'Reopened';
-export type DepartmentName = 'Water Supply' | 'Engineering' | 'Sanitation' | 'Electrical' | 'Town Planning' | 'Revenue' | 'Health' | 'IT & Data Management';
+
+/**
+ * Official 7 Core Administrative Departments of MCK:
+ * 1. Establishment Section
+ * 2. Revenue Section
+ * 3. Engineering Section
+ * 4. Town Planning Section (TPS)
+ * 5. Sanitation Section
+ * 6. Statistics / Birth & Death Registration Section
+ * 7. Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)
+ */
+export type DepartmentName =
+  | 'Establishment Section'
+  | 'Revenue Section'
+  | 'Engineering Section'
+  | 'Town Planning Section (TPS)'
+  | 'Sanitation Section'
+  | 'Statistics / Birth & Death Registration Section'
+  | 'Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)'
+  | 'Water Supply'
+  | 'Engineering'
+  | 'Sanitation'
+  | 'Electrical'
+  | 'Town Planning'
+  | 'Revenue'
+  | 'Health'
+  | 'IT & Data Management';
 
 export interface TimelineEntry {
   time: string;

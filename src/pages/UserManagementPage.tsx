@@ -154,7 +154,9 @@ export const UserManagementPage: React.FC = () => {
     const categoryName = editRole === 'field_staff' ? (selectedCategoryObj?.name || 'Sanitation Worker') : undefined;
     const categoryId = editRole === 'field_staff' ? (selectedCategoryObj?.id || 'sanitation-worker') : undefined;
     const deptId = editRole === 'field_staff' && selectedCategoryObj ? selectedCategoryObj.departmentId : editDeptName;
-    const deptName = editRole === 'field_staff' && selectedCategoryObj ? selectedCategoryObj.departmentName : `${editDeptName} Department`;
+    const deptName = editRole === 'field_staff' && selectedCategoryObj 
+      ? selectedCategoryObj.departmentName 
+      : (editDeptName.includes('Section') ? editDeptName : `${editDeptName} Section`);
 
     const updates: Partial<User> = {
       displayName: editDisplayName.trim(),
@@ -198,7 +200,9 @@ export const UserManagementPage: React.FC = () => {
     const categoryName = newRole === 'field_staff' ? (selectedCategoryObj?.name || 'Sanitation Worker') : undefined;
     const categoryId = newRole === 'field_staff' ? (selectedCategoryObj?.id || 'sanitation-worker') : undefined;
     const deptId = newRole === 'field_staff' && selectedCategoryObj ? selectedCategoryObj.departmentId : newDeptName;
-    const deptName = newRole === 'field_staff' && selectedCategoryObj ? selectedCategoryObj.departmentName : `${newDeptName} Department`;
+    const deptName = newRole === 'field_staff' && selectedCategoryObj 
+      ? selectedCategoryObj.departmentName 
+      : (newDeptName.includes('Section') ? newDeptName : `${newDeptName} Section`);
 
     const success = createUser({
       passwordHash: newPassword,
@@ -936,7 +940,7 @@ export const UserManagementPage: React.FC = () => {
 
                     <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-600 mt-1">
                       <Building2 className="w-3 h-3 text-slate-400" />
-                      <span>{t(cat.departmentName)} {t('Department')}</span>
+                      <span>{t(cat.departmentName)}</span>
                     </div>
 
                     <p className="text-[11px] text-slate-600 mt-1.5 line-clamp-2 leading-relaxed">
@@ -1246,10 +1250,13 @@ export const UserManagementPage: React.FC = () => {
                     onChange={(val) => setEditDeptName(String(val))}
                     searchPlaceholder={t('Search department...')}
                     options={[
-                      { value: 'Engineering', label: t('Engineering Department') },
-                      { value: 'Water Supply', label: t('Water Supply Department') },
-                      { value: 'Sanitation', label: t('Sanitation Department') },
-                      { value: 'Electrical', label: t('Electrical Department') },
+                      { value: 'Engineering Section', label: t('Engineering Section') },
+                      { value: 'Sanitation Section', label: t('Sanitation Section') },
+                      { value: 'Town Planning Section (TPS)', label: t('Town Planning Section (TPS)') },
+                      { value: 'Revenue Section', label: t('Revenue Section') },
+                      { value: 'Establishment Section', label: t('Establishment Section') },
+                      { value: 'Statistics / Birth & Death Registration Section', label: t('Statistics / Birth & Death Registration Section') },
+                      { value: 'Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)', label: t('Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)') },
                     ]}
                     fullWidth
                     size="sm"
@@ -1425,10 +1432,13 @@ export const UserManagementPage: React.FC = () => {
                     onChange={(val) => setNewDeptName(String(val))}
                     searchPlaceholder={t('Search department...')}
                     options={[
-                      { value: 'Engineering', label: t('Engineering Department') },
-                      { value: 'Water Supply', label: t('Water Supply Department') },
-                      { value: 'Sanitation', label: t('Sanitation Department') },
-                      { value: 'Electrical', label: t('Electrical Department') },
+                      { value: 'Engineering Section', label: t('Engineering Section') },
+                      { value: 'Sanitation Section', label: t('Sanitation Section') },
+                      { value: 'Town Planning Section (TPS)', label: t('Town Planning Section (TPS)') },
+                      { value: 'Revenue Section', label: t('Revenue Section') },
+                      { value: 'Establishment Section', label: t('Establishment Section') },
+                      { value: 'Statistics / Birth & Death Registration Section', label: t('Statistics / Birth & Death Registration Section') },
+                      { value: 'Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)', label: t('Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)') },
                     ]}
                     fullWidth
                     size="sm"
@@ -1735,12 +1745,13 @@ export const UserManagementPage: React.FC = () => {
                   onChange={(val) => setCatDept(String(val))}
                   searchPlaceholder={t('Search department...')}
                   options={[
-                    { value: 'Engineering', label: t('Engineering Department') },
-                    { value: 'Sanitation', label: t('Sanitation Department') },
-                    { value: 'Electrical', label: t('Electrical Department') },
-                    { value: 'Water Supply', label: t('Water Supply Department') },
-                    { value: 'Health', label: t('Health Department') },
-                    { value: 'Town Planning', label: t('Town Planning Department') },
+                    { value: 'Engineering Section', label: t('Engineering Section') },
+                    { value: 'Sanitation Section', label: t('Sanitation Section') },
+                    { value: 'Town Planning Section (TPS)', label: t('Town Planning Section (TPS)') },
+                    { value: 'Revenue Section', label: t('Revenue Section') },
+                    { value: 'Establishment Section', label: t('Establishment Section') },
+                    { value: 'Statistics / Birth & Death Registration Section', label: t('Statistics / Birth & Death Registration Section') },
+                    { value: 'Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)', label: t('Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)') },
                   ]}
                   fullWidth
                   size="sm"

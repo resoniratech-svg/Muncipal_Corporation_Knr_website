@@ -23,7 +23,7 @@ export const WorkflowPage: React.FC = () => {
         tagline={t("One Platform. One Process. One Responsibility. Effective Grievance Redressal. Better KMC.")}
         actionButton={
           <span className="text-xs bg-emerald-700 text-white font-bold px-3 py-1 rounded-md shadow uppercase tracking-wide">
-            {t("8 Departments Connected")}
+            {t("7 Core MCK Departments Connected")}
           </span>
         }
       />

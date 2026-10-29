@@ -10,7 +10,8 @@ import {
   Building, Wrench, CheckCircle2, Clock, AlertTriangle, 
   MapPin, Check, Filter, UserCheck, ChevronRight, UserPlus, X, ShieldAlert,
   ChevronDown, ChevronUp, Waves, Construction, Trash2, Lightbulb, Droplet,
-  Search, ArrowUpDown, Calendar, Eye, CheckCheck, RefreshCw, Layers
+  Search, ArrowUpDown, Calendar, Eye, CheckCheck, RefreshCw, Layers,
+  Banknote, FileText, HeartPulse, Users
 } from 'lucide-react';
 import { SearchableSelect } from '../components/common/SearchableSelect';
 import { userRepository, staffCategoryRepository } from '../storage';
@@ -33,7 +34,7 @@ export const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   drainage: {
     key: 'drainage',
     name: 'Drainage',
-    department: 'Engineering',
+    department: 'Engineering Section',
     icon: Waves,
     color: 'text-cyan-700',
     borderAccent: 'border-l-cyan-600',
@@ -44,7 +45,7 @@ export const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   roads: {
     key: 'roads',
     name: 'Roads',
-    department: 'Engineering',
+    department: 'Engineering Section',
     icon: Construction,
     color: 'text-amber-700',
     borderAccent: 'border-l-amber-600',
@@ -54,8 +55,8 @@ export const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   },
   civil: {
     key: 'civil',
-    name: 'Civil',
-    department: 'Engineering',
+    name: 'Civil Works',
+    department: 'Engineering Section',
     icon: Building,
     color: 'text-indigo-700',
     borderAccent: 'border-l-indigo-600',
@@ -66,7 +67,7 @@ export const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   'street-lights': {
     key: 'street-lights',
     name: 'Street Lights',
-    department: 'Electrical',
+    department: 'Engineering Section',
     icon: Lightbulb,
     color: 'text-yellow-700',
     borderAccent: 'border-l-yellow-600',
@@ -77,7 +78,7 @@ export const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   'water-supply': {
     key: 'water-supply',
     name: 'Water Supply',
-    department: 'Water Supply',
+    department: 'Engineering Section',
     icon: Droplet,
     color: 'text-sky-700',
     borderAccent: 'border-l-sky-600',
@@ -87,14 +88,91 @@ export const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
   },
   sanitation: {
     key: 'sanitation',
-    name: 'Sanitation',
-    department: 'Sanitation',
+    name: 'Sanitation & Garbage',
+    department: 'Sanitation Section',
     icon: Trash2,
     color: 'text-emerald-700',
     borderAccent: 'border-l-emerald-600',
     badgeBg: 'bg-emerald-50 border-emerald-200',
     badgeText: 'text-emerald-900',
     defaultSla: 48,
+  },
+  'public-health': {
+    key: 'public-health',
+    name: 'Public Health & Fogging',
+    department: 'Sanitation Section',
+    icon: HeartPulse,
+    color: 'text-rose-700',
+    borderAccent: 'border-l-rose-600',
+    badgeBg: 'bg-rose-50 border-rose-200',
+    badgeText: 'text-rose-900',
+    defaultSla: 48,
+  },
+  'building-perm': {
+    key: 'building-perm',
+    name: 'Building Permissions',
+    department: 'Town Planning Section (TPS)',
+    icon: Building,
+    color: 'text-purple-700',
+    borderAccent: 'border-l-purple-600',
+    badgeBg: 'bg-purple-50 border-purple-200',
+    badgeText: 'text-purple-900',
+    defaultSla: 72,
+  },
+  parks: {
+    key: 'parks',
+    name: 'Parks & Greening',
+    department: 'Town Planning Section (TPS)',
+    icon: Building,
+    color: 'text-teal-700',
+    borderAccent: 'border-l-teal-600',
+    badgeBg: 'bg-teal-50 border-teal-200',
+    badgeText: 'text-teal-900',
+    defaultSla: 72,
+  },
+  'property-tax': {
+    key: 'property-tax',
+    name: 'Property Tax (House Tax)',
+    department: 'Revenue Section',
+    icon: Banknote,
+    color: 'text-green-700',
+    borderAccent: 'border-l-green-600',
+    badgeBg: 'bg-green-50 border-green-200',
+    badgeText: 'text-green-900',
+    defaultSla: 48,
+  },
+  'staff-postings': {
+    key: 'staff-postings',
+    name: 'Staff Postings & HR',
+    department: 'Establishment Section',
+    icon: UserCheck,
+    color: 'text-blue-700',
+    borderAccent: 'border-l-blue-600',
+    badgeBg: 'bg-blue-50 border-blue-200',
+    badgeText: 'text-blue-900',
+    defaultSla: 48,
+  },
+  certificates: {
+    key: 'certificates',
+    name: 'Birth & Death Registry',
+    department: 'Statistics / Birth & Death Registration Section',
+    icon: FileText,
+    color: 'text-slate-700',
+    borderAccent: 'border-l-slate-600',
+    badgeBg: 'bg-slate-50 border-slate-200',
+    badgeText: 'text-slate-900',
+    defaultSla: 48,
+  },
+  'asara-pension': {
+    key: 'asara-pension',
+    name: 'Urban Welfare & Asara',
+    department: 'Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)',
+    icon: HeartPulse,
+    color: 'text-pink-700',
+    borderAccent: 'border-l-pink-600',
+    badgeBg: 'bg-pink-50 border-pink-200',
+    badgeText: 'text-pink-900',
+    defaultSla: 72,
   },
 };
 
@@ -105,17 +183,104 @@ export function resolveCategoryKey(g: GrievanceItem): string {
   if (c.includes('road') || c.includes('pothole') || d.includes('road') || d.includes('pothole')) return 'roads';
   if (c.includes('light') || c.includes('electric') || d.includes('light')) return 'street-lights';
   if (c.includes('water') || c.includes('pipe') || d.includes('water') || d.includes('pipe') || c.includes('leak')) return 'water-supply';
-  if (c.includes('sanitation') || c.includes('garbage') || c.includes('waste')) return 'sanitation';
+  if (c.includes('garbage') || c.includes('waste') || c.includes('sanitation') || c.includes('clean')) return 'sanitation';
+  if (c.includes('pest') || c.includes('fogging') || d.includes('mosquito')) return 'public-health';
+  if (c.includes('building') || c.includes('layout') || c.includes('permission')) return 'building-perm';
+  if (c.includes('park') || c.includes('green') || d.includes('tree')) return 'parks';
+  if (c.includes('tax') || c.includes('revenue') || c.includes('property')) return 'property-tax';
+  if (c.includes('staff') || c.includes('posting') || c.includes('hr')) return 'staff-postings';
+  if (c.includes('birth') || c.includes('death') || c.includes('certificate')) return 'certificates';
+  if (c.includes('pension') || c.includes('asara') || c.includes('mepma')) return 'asara-pension';
   return 'civil';
 }
+
+export const MCK_SECTIONS = [
+  { id: 'engineering', name: 'Engineering Section', shortName: 'Engineering', description: 'Roads, bridges, water supply, drainage & street lights' },
+  { id: 'sanitation', name: 'Sanitation Section', shortName: 'Sanitation', description: 'Solid waste management, city cleanliness & public health' },
+  { id: 'town-planning', name: 'Town Planning Section (TPS)', shortName: 'Town Planning', description: 'City layouts, building permissions, mutations & parks' },
+  { id: 'revenue', name: 'Revenue Section', shortName: 'Revenue', description: 'Property tax, vacant land tax (VLT) & evaluations' },
+  { id: 'establishment', name: 'Establishment Section', shortName: 'Establishment', description: 'General administration, HR & staff postings' },
+  { id: 'statistics', name: 'Statistics / Birth & Death Registration Section', shortName: 'Statistics / Civil Registry', description: 'Birth & death certificates and civil registry records' },
+  { id: 'urban-welfare', name: 'Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)', shortName: 'Urban Welfare (MEPMA & Asara)', description: 'MEPMA self-help groups & Asara pensions' },
+];
+
+const SECTION_DEFAULT_CATEGORIES: Record<string, { key: string; label: string; icon: React.ElementType }[]> = {
+  'Engineering Section': [
+    { key: 'drainage', label: 'Drainage', icon: Waves },
+    { key: 'roads', label: 'Roads', icon: Construction },
+    { key: 'street-lights', label: 'Street Lights', icon: Lightbulb },
+    { key: 'water-supply', label: 'Water Supply', icon: Droplet },
+    { key: 'civil', label: 'Civil Works', icon: Building },
+  ],
+  'Sanitation Section': [
+    { key: 'sanitation', label: 'Sanitation & Garbage', icon: Trash2 },
+    { key: 'public-health', label: 'Public Health & Fogging', icon: HeartPulse },
+  ],
+  'Town Planning Section (TPS)': [
+    { key: 'building-perm', label: 'Building Permissions', icon: Building },
+    { key: 'parks', label: 'Parks & Greening', icon: Building },
+  ],
+  'Revenue Section': [
+    { key: 'property-tax', label: 'Property Tax (House Tax)', icon: Banknote },
+  ],
+  'Establishment Section': [
+    { key: 'staff-postings', label: 'Staff Postings & HR', icon: UserCheck },
+  ],
+  'Statistics / Birth & Death Registration Section': [
+    { key: 'certificates', label: 'Birth & Death Registry', icon: FileText },
+  ],
+  'Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)': [
+    { key: 'asara-pension', label: 'Urban Welfare & Asara', icon: HeartPulse },
+  ],
+};
 
 export const DepartmentDashboardPage: React.FC = () => {
   const { grievances, tasks, wards, assignGrievanceToStaff, approveAndClose } = useApp();
   const { currentUser } = useAuth();
   const { t } = usePrefs();
 
-  const userDept = currentUser?.departmentName || 'Engineering Department';
   const officerName = currentUser?.displayName || 'Er. P. Venkateshwarlu';
+
+  // MCK Administrative Section state (defaults to user's assigned department or Engineering Section)
+  const initialSection = useMemo(() => {
+    const raw = currentUser?.departmentName || '';
+    if (raw) {
+      const found = MCK_SECTIONS.find(s => 
+        raw.toLowerCase().includes(s.id) ||
+        raw.toLowerCase().includes(s.shortName.toLowerCase()) ||
+        s.name.toLowerCase().includes(raw.toLowerCase())
+      );
+      if (found) return found.name;
+    }
+    return 'Engineering Section';
+  }, [currentUser]);
+
+  const [selectedSection, setSelectedSection] = useState<string>(() => {
+    try {
+      return sessionStorage.getItem('kmc_dept_selected_section') || initialSection;
+    } catch {
+      return initialSection;
+    }
+  });
+
+  const handleSectionChange = (newSec: string) => {
+    setSelectedSection(newSec);
+    try {
+      sessionStorage.setItem('kmc_dept_selected_section', newSec);
+    } catch {}
+    const defaultCats = SECTION_DEFAULT_CATEGORIES[newSec] || SECTION_DEFAULT_CATEGORIES['Engineering Section'];
+    if (defaultCats && defaultCats.length > 0) {
+      setActiveCategoryKey(defaultCats[0].key);
+    }
+  };
+
+  const sectionOptions = useMemo(() => {
+    return MCK_SECTIONS.map((sec) => ({
+      value: sec.name,
+      label: sec.name,
+      sublabel: sec.description,
+    }));
+  }, []);
 
   // 1. Ward Selection State: default to Ward 27 or session
   const [selectedWard, setSelectedWard] = useState<string>(() => {
@@ -158,20 +323,96 @@ export const DepartmentDashboardPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Department-wide grievances belonging strictly to this department's operational scope
+  // Department-wide grievances belonging strictly to selected section
   const deptGrievancesAll = useMemo(() => {
     return grievances.filter(g => {
       const deptLower = (g.department || '').toLowerCase();
       const catLower = (g.category || '').toLowerCase();
-      return (
-        deptLower.includes('engineering') || 
-        catLower.includes('drainage') || 
-        catLower.includes('road') ||
-        catLower.includes('civil') ||
-        g.department === 'Engineering'
-      );
+      const descLower = (g.description || '').toLowerCase();
+
+      if (selectedSection.includes('Engineering')) {
+        return (
+          deptLower.includes('engineering') || 
+          deptLower.includes('electrical') ||
+          deptLower.includes('water') ||
+          catLower.includes('drainage') || 
+          catLower.includes('road') ||
+          catLower.includes('light') ||
+          catLower.includes('electric') ||
+          catLower.includes('water') ||
+          catLower.includes('civil') ||
+          descLower.includes('drain') ||
+          descLower.includes('road') ||
+          descLower.includes('pipe') ||
+          g.department === 'Engineering' ||
+          g.department === 'Engineering Section'
+        );
+      }
+      if (selectedSection.includes('Sanitation')) {
+        return (
+          deptLower.includes('sanitation') || 
+          deptLower.includes('health') ||
+          catLower.includes('garbage') || 
+          catLower.includes('sanitation') || 
+          catLower.includes('waste') ||
+          catLower.includes('pest') ||
+          descLower.includes('garbage') ||
+          descLower.includes('cleaning') ||
+          g.department === 'Sanitation' ||
+          g.department === 'Sanitation Section'
+        );
+      }
+      if (selectedSection.includes('Town Planning')) {
+        return (
+          deptLower.includes('town') || 
+          deptLower.includes('planning') ||
+          catLower.includes('building') || 
+          catLower.includes('layout') ||
+          catLower.includes('park') ||
+          catLower.includes('green') ||
+          g.department === 'Town Planning' ||
+          g.department === 'Town Planning Section (TPS)'
+        );
+      }
+      if (selectedSection.includes('Revenue')) {
+        return (
+          deptLower.includes('revenue') || 
+          catLower.includes('tax') || 
+          catLower.includes('property') ||
+          descLower.includes('tax') ||
+          g.department === 'Revenue' ||
+          g.department === 'Revenue Section'
+        );
+      }
+      if (selectedSection.includes('Establishment')) {
+        return (
+          deptLower.includes('establishment') || 
+          catLower.includes('staff') || 
+          catLower.includes('hr') ||
+          g.department === 'Establishment Section'
+        );
+      }
+      if (selectedSection.includes('Statistics')) {
+        return (
+          deptLower.includes('statistic') || 
+          catLower.includes('birth') || 
+          catLower.includes('death') || 
+          catLower.includes('certificate') ||
+          g.department === 'Statistics / Birth & Death Registration Section'
+        );
+      }
+      if (selectedSection.includes('Welfare') || selectedSection.includes('MEPMA')) {
+        return (
+          deptLower.includes('welfare') || 
+          deptLower.includes('mepma') || 
+          deptLower.includes('asara') || 
+          catLower.includes('pension') ||
+          g.department === 'Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)'
+        );
+      }
+      return true;
     });
-  }, [grievances]);
+  }, [grievances, selectedSection]);
 
   // Ward Selector options
   const wardOptions = useMemo(() => {
@@ -224,14 +465,7 @@ export const DepartmentDashboardPage: React.FC = () => {
   }, [wardFilteredGrievances]);
 
   const availableCategories = useMemo(() => {
-    const base = [
-      { key: 'drainage', label: 'Drainage', icon: Waves },
-      { key: 'roads', label: 'Roads', icon: Construction },
-      { key: 'civil', label: 'Civil', icon: Building },
-      { key: 'street-lights', label: 'Street Lights', icon: Lightbulb },
-      { key: 'water-supply', label: 'Water Supply', icon: Droplet },
-      { key: 'sanitation', label: 'Sanitation', icon: Trash2 },
-    ];
+    const base = SECTION_DEFAULT_CATEGORIES[selectedSection] || SECTION_DEFAULT_CATEGORIES['Engineering Section'];
 
     const extraKeys = new Set<string>();
     wardFilteredGrievances.forEach(g => {
@@ -248,14 +482,14 @@ export const DepartmentDashboardPage: React.FC = () => {
     }));
 
     return [...base, ...extras];
-  }, [wardFilteredGrievances]);
+  }, [wardFilteredGrievances, selectedSection]);
 
   // Active category metadata
   const activeCategoryMeta = useMemo(() => {
     return CATEGORY_DEFINITIONS[activeCategoryKey] || {
       key: activeCategoryKey,
       name: activeCategoryKey.toUpperCase(),
-      department: 'Engineering',
+      department: selectedSection,
       icon: Wrench,
       color: 'text-slate-700',
       borderAccent: 'border-l-slate-600',
@@ -263,7 +497,7 @@ export const DepartmentDashboardPage: React.FC = () => {
       badgeText: 'text-slate-900',
       defaultSla: 72,
     };
-  }, [activeCategoryKey]);
+  }, [activeCategoryKey, selectedSection]);
 
   // Grievances filtered strictly by: (Selected Ward) AND (Selected Category Tab) AND (Selected Status) AND (Search)
   const filteredCategoryGrievances = useMemo(() => {
@@ -333,24 +567,43 @@ export const DepartmentDashboardPage: React.FC = () => {
     showToast(t(`Resolution verified and approved for Grievance ${gid}!`));
   };
 
-  // Dispatched tasks strictly filtered to selected ward
+  // Dispatched tasks strictly filtered to selected ward and section
   const displayedTasks = useMemo(() => {
-    const deptTasks = tasks.filter(t => 
-      t.departmentId?.toLowerCase().includes('engineering') || 
-      t.task.toLowerCase().includes('drain') || 
-      t.task.toLowerCase().includes('road') ||
-      t.task.toLowerCase().includes('pothole')
-    );
+    const deptTasks = tasks.filter(t => {
+      const deptLower = (t.departmentId || '').toLowerCase();
+      if (selectedSection.includes('Engineering')) {
+        return deptLower.includes('engineering') || deptLower.includes('electrical') || deptLower.includes('water');
+      }
+      if (selectedSection.includes('Sanitation')) {
+        return deptLower.includes('sanitation') || deptLower.includes('health');
+      }
+      if (selectedSection.includes('Town Planning')) {
+        return deptLower.includes('town') || deptLower.includes('planning');
+      }
+      if (selectedSection.includes('Revenue')) {
+        return deptLower.includes('revenue');
+      }
+      if (selectedSection.includes('Establishment')) {
+        return deptLower.includes('establishment');
+      }
+      if (selectedSection.includes('Statistics')) {
+        return deptLower.includes('statistic');
+      }
+      if (selectedSection.includes('Welfare')) {
+        return deptLower.includes('welfare');
+      }
+      return true;
+    });
     if (selectedWard === 'all') return deptTasks;
     const targetWardNum = parseInt(selectedWard, 10);
     return deptTasks.filter(t => t.wardId === targetWardNum);
-  }, [tasks, selectedWard]);
+  }, [tasks, selectedWard, selectedSection]);
 
   return (
     <div className="min-h-screen flex flex-col bg-kmc-bg">
       {/* A. Existing Application Header */}
       <BannerStrip
-        title={`${t('Department Officer Portal')} • ${t(userDept)}`}
+        title={`${t('Department Officer Portal')} • ${selectedSection.toUpperCase()}`}
         tagline="Ward-Specific Grievance Redressal, Category Grouping & Ground Staff Dispatch"
         actionButton={
           <span className="text-xs bg-orange-700 text-white font-bold px-3 py-1 rounded-md shadow uppercase tracking-wide">
@@ -369,10 +622,27 @@ export const DepartmentDashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* B. Ward Selector (Prominent at top per reference sketch) */}
+        {/* B. MCK Section Switcher & Ward Selector */}
         <section className="bg-white rounded-xl shadow-card border border-slate-200 p-4 border-l-4 border-l-kmc-navy">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex-1 max-w-2xl">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+            {/* 1. Administrative Department Section (7 Core MCK Sections) */}
+            <div className="lg:col-span-5">
+              <label htmlFor="dept-section-select" className="block text-xs font-bold text-slate-800 uppercase mb-1.5 flex items-center gap-1.5">
+                <Building className="w-3.5 h-3.5 text-kmc-navy" />
+                <span>{t('MCK Administrative Section (7 Core Sections)')}:</span>
+              </label>
+              <SearchableSelect
+                value={selectedSection}
+                onChange={(newSec) => handleSectionChange(String(newSec))}
+                searchPlaceholder={t('Search MCK Section...')}
+                options={sectionOptions}
+                fullWidth
+                size="md"
+              />
+            </div>
+
+            {/* 2. Ward Selector */}
+            <div className="lg:col-span-4">
               <label htmlFor="dept-ward-select" className="block text-xs font-bold text-slate-800 uppercase mb-1.5 flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-kmc-navy" />
                 <span>{t('Select Ward')}:</span>
@@ -387,15 +657,15 @@ export const DepartmentDashboardPage: React.FC = () => {
               />
             </div>
 
-            {/* Compact Ward Status Badge */}
-            <div className="flex items-center gap-3 text-xs bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-lg self-start sm:self-auto shrink-0">
+            {/* 3. Compact Ward Status Badge */}
+            <div className="lg:col-span-3 flex items-center justify-between gap-3 text-xs bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-lg shrink-0">
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-500 block">{t('Ward Status')}</span>
-                <span className="font-bold text-slate-800">
+                <span className="font-bold text-slate-800 line-clamp-1">
                   {selectedWard === 'all'
                     ? t('All 66 Wards')
                     : activeWardObj
-                      ? `Ward ${activeWardObj.id} (${activeWardObj.name})`
+                      ? `Ward ${activeWardObj.id}`
                       : `Ward ${selectedWard}`}
                 </span>
               </div>

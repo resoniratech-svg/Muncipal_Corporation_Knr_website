@@ -121,6 +121,18 @@ export function healDemoUsers(): void {
         user.name = user.displayName;
         userChanged = true;
       }
+      if (demoUser.departmentName && user.departmentName !== demoUser.departmentName) {
+        user.departmentName = demoUser.departmentName;
+        userChanged = true;
+      }
+      if (demoUser.departmentId && user.departmentId !== demoUser.departmentId) {
+        user.departmentId = demoUser.departmentId;
+        userChanged = true;
+      }
+      if (demoUser.roleTitle && user.roleTitle !== demoUser.roleTitle) {
+        user.roleTitle = demoUser.roleTitle;
+        userChanged = true;
+      }
       if (Array.isArray(demoUser.permissions)) {
         if (!Array.isArray(user.permissions)) {
           user.permissions = [...demoUser.permissions];
@@ -268,6 +280,8 @@ export function initializeStorage(forceReset = false): void {
     healDemoUsers();
     // v1.5.0: Replace cartoon demo photos with authentic municipal photographs
     healGrievancePhotos();
+    // v1.6.0: The 7 Core Administrative Departments of MCK synchronization
+    healDepartments();
     meta.version = CURRENT_SCHEMA_VERSION;
     meta.lastUpdatedAt = new Date().toISOString();
     storageService.setItem(STORAGE_KEYS.META, meta);
@@ -275,5 +289,69 @@ export function initializeStorage(forceReset = false): void {
     // Idempotent self-healing pass on active sessions
     healDemoUsers();
     healGrievancePhotos();
+    healDepartments();
+  }
+}
+
+/**
+ * Ensures stored departments and grievances align with MCK's 7 Core Administrative Departments:
+ * 1. Establishment Section
+ * 2. Revenue Section
+ * 3. Engineering Section
+ * 4. Town Planning Section (TPS)
+ * 5. Sanitation Section
+ * 6. Statistics / Birth & Death Registration Section
+ * 7. Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)
+ */
+export function healDepartments(): void {
+  storageService.setItem(STORAGE_KEYS.DEPARTMENTS, DEPARTMENTS);
+  storageService.setItem(STORAGE_KEYS.STAFF_CATEGORIES, DEFAULT_STAFF_CATEGORIES);
+
+  const grievances = storageService.getItem<any[]>(STORAGE_KEYS.GRIEVANCES);
+  if (Array.isArray(grievances)) {
+    let changed = false;
+    const updated = grievances.map((g) => {
+      const d = g.department || '';
+      let newDept = d;
+      if (d === 'Engineering') newDept = 'Engineering Section';
+      else if (d === 'Sanitation') newDept = 'Sanitation Section';
+      else if (d === 'Water Supply' || d === 'Electrical') newDept = 'Engineering Section';
+      else if (d === 'Health') newDept = 'Sanitation Section';
+      else if (d === 'Town Planning') newDept = 'Town Planning Section (TPS)';
+
+      if (newDept !== d) {
+        changed = true;
+        return { ...g, department: newDept };
+      }
+      return g;
+    });
+
+    if (changed) {
+      storageService.setItem(STORAGE_KEYS.GRIEVANCES, updated);
+    }
+  }
+
+  const tasks = storageService.getItem<any[]>(STORAGE_KEYS.TASKS);
+  if (Array.isArray(tasks)) {
+    let tasksChanged = false;
+    const updatedTasks = tasks.map((t) => {
+      const dept = t.department || '';
+      let newDept = dept;
+      if (dept === 'Engineering') newDept = 'Engineering Section';
+      else if (dept === 'Sanitation') newDept = 'Sanitation Section';
+      else if (dept === 'Water Supply' || dept === 'Electrical') newDept = 'Engineering Section';
+      else if (dept === 'Health') newDept = 'Sanitation Section';
+      else if (dept === 'Town Planning') newDept = 'Town Planning Section (TPS)';
+
+      if (newDept !== dept) {
+        tasksChanged = true;
+        return { ...t, department: newDept };
+      }
+      return t;
+    });
+
+    if (tasksChanged) {
+      storageService.setItem(STORAGE_KEYS.TASKS, updatedTasks);
+    }
   }
 }

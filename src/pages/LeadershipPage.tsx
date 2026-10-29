@@ -60,11 +60,13 @@ export const LeadershipPage: React.FC = () => {
   ];
 
   const departmentPerformance = [
-    { name: t("Sanitation"), value: 82, color: "#2E7D32" },
-    { name: t("Roads"), value: 76, color: "#7CB342" },
-    { name: t("Water Supply"), value: 75, color: "#0288D1" },
-    { name: t("Street Lights"), value: 75, color: "#FBC02D" },
-    { name: t("Engineering"), value: 68, color: "#F57C00" },
+    { name: t("Sanitation Section"), value: 82, color: "#2E7D32" },
+    { name: t("Engineering Section"), value: 76, color: "#D97706" },
+    { name: t("Revenue Section"), value: 85, color: "#0288D1" },
+    { name: t("Town Planning Section (TPS)"), value: 74, color: "#7C3AED" },
+    { name: t("Establishment Section"), value: 88, color: "#2563EB" },
+    { name: t("Statistics Section"), value: 91, color: "#475569" },
+    { name: t("Urban Welfare (MEPMA & Asara)"), value: 84, color: "#DB2777" },
   ];
 
   const budgetDonutData = [
@@ -348,7 +350,7 @@ export const LeadershipPage: React.FC = () => {
                   {t("High pendency in Ward 27 – Sanitation")}
                 </p>
                 <p className="text-slate-600 text-[11px] mt-0.5">
-                  {t("Escalated to Sanitation Department for immediate clearance. Click to open ward console.")}
+                  {t("Escalated to Sanitation Section for immediate clearance. Click to open ward console.")}
                 </p>
               </div>
 
