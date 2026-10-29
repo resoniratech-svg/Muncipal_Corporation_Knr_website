@@ -42,7 +42,7 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
   const navigate = useNavigate();
   const { t, lang, setLang } = usePrefs();
   const { currentUser, logout } = useAuth();
-  const { grievances } = useApp();
+  const { grievances, wards } = useApp();
 
   const [currentTab, setCurrentTab] = useState<'home' | 'services' | 'alerts' | 'profile'>(activeTab);
   const [hasUnreadAlerts, setHasUnreadAlerts] = useState(true);
@@ -70,10 +70,13 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
     if (onTabChange) onTabChange(tab);
   };
 
-  // Citizen displayName fallback
-  const citizenName = currentUser?.displayName || 'Smt. Priya Rao';
-  const citizenWard = currentUser?.assignedWardName || 'Ward 27 – Green Park Colony';
-  const citizenId = currentUser?.id || 'USR-CITIZEN-01';
+  // Citizen displayName and Ward resolution
+  const citizenName = currentUser?.displayName || 'Smt. Lavanya Reddy';
+  const citizenWardId = currentUser?.assignedWardIds?.[0] || 27;
+  const citizenWardObj = wards.find((w) => w.id === citizenWardId);
+  const citizenWard = currentUser?.assignedWardName || (citizenWardObj ? `Ward ${citizenWardObj.id} – ${citizenWardObj.name}` : 'Ward 12 – Booth Colony');
+  const citizenId = currentUser?.id || 'USR-CITIZEN-02';
+  const corporatorName = citizenWardObj?.corporator || 'Smt. P. Lavanya';
 
   // Services catalog list
   const servicesList = [
@@ -528,6 +531,24 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
                 </p>
                 <div className="mt-2 inline-block px-2.5 py-0.5 bg-blue-50 text-kmc-navy rounded-full text-[11px] font-semibold border border-blue-200">
                   {citizenWard}
+                </div>
+              </div>
+
+              {/* Elected Corporator Info in Profile */}
+              <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-3 border border-blue-200/70 text-left space-y-1 shadow-xs">
+                <span className="text-[10px] font-bold text-kmc-navy uppercase tracking-wider block">
+                  {t('Elected Ward Corporator')}
+                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900">
+                    {t(corporatorName)}
+                  </span>
+                  <a
+                    href={`tel:+9190000${String(citizenWardObj?.id || 27).padStart(2, '0')}001`}
+                    className="text-[10px] font-mono font-bold text-kmc-navy bg-white px-2 py-0.5 rounded border border-blue-200 hover:underline"
+                  >
+                    +91 90000 {String(citizenWardObj?.id || 27).padStart(2, '0')}001
+                  </a>
                 </div>
               </div>
 

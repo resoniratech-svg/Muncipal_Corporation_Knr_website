@@ -10,7 +10,7 @@ import { StatusChip } from '../components/common/StatusChip';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../auth/AuthContext';
 import { GrievanceItem } from '../data/grievances';
-import { Laptop, Smartphone } from 'lucide-react';
+import { Laptop, Smartphone, MapPin, Phone, Building2, Clock, ShieldCheck, User } from 'lucide-react';
 import { usePrefs } from '../i18n';
 import { MobileReportFlow } from '../components/citizen/mobile/MobileReportFlow';
 import { MobileTrackFlow } from '../components/citizen/mobile/MobileTrackFlow';
@@ -18,10 +18,16 @@ import { MobileDetailFlow } from '../components/citizen/mobile/MobileDetailFlow'
 
 export const CitizenPage: React.FC = () => {
   const navigate = useNavigate();
-  const { activeWardId, grievances, projects, dataMode } = useApp();
+  const { activeWardId, grievances, projects, dataMode, wards } = useApp();
   const { currentUser } = useAuth();
   const { t } = usePrefs();
   const [activeView, setActiveView] = useState<'portal' | 'mobile'>('portal');
+
+  // Dynamic Citizen Profile and Elected Corporator Resolution
+  const citizenDisplayName = currentUser?.displayName || 'Smt. Lavanya Reddy';
+  const citizenWardId = currentUser?.assignedWardIds?.[0] || activeWardId || 27;
+  const citizenWard = wards.find((w) => w.id === citizenWardId) || wards.find((w) => w.id === 27) || wards[0];
+  const corporatorName = citizenWard.corporator;
 
   // In-frame mobile state for strictly self-contained smartphone experience
   const [mobileScreen, setMobileScreen] = useState<'home' | 'report' | 'track' | 'detail'>('home');
@@ -72,28 +78,111 @@ export const CitizenPage: React.FC = () => {
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 w-full">
         
-        {/* Resident Greeting Banner */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-l-kmc-green">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold font-mono bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded">
-                {t("Citizen ID:")} {currentUser?.id || 'USR-CITIZEN-01'}
-              </span>
-              <span className="text-xs font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded">
-                {t(currentUser?.assignedWardName || 'Ward 27 – Green Park Colony')}
-              </span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold font-heading uppercase text-slate-900 mt-1">
-              {t("Namaste, Priya Rao!")}
-            </h2>
-            <p className="text-xs text-slate-500">
-              {t("Welcome to the Karimnagar Municipal Corporation Public Services & Grievance Portal.")}
-            </p>
-          </div>
+        {/* Resident Greeting Banner with Elected Corporator Details */}
+        <section className="bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden border-l-4 border-l-kmc-green">
+          <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            {/* Left Column: Citizen Welcome */}
+            <div className="lg:col-span-7 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold font-mono bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded">
+                  {t("Citizen ID:")} {currentUser?.id || 'USR-CITIZEN-02'}
+                </span>
+                <span className="text-xs font-bold bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                  <span>{t(currentUser?.assignedWardName || `Ward ${citizenWard.id} – ${citizenWard.name}`)}</span>
+                </span>
+                <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded border border-blue-200">
+                  {t("Verified Resident")}
+                </span>
+              </div>
 
-          <div className="text-right">
-            <span className="text-[11px] text-slate-500 uppercase font-bold">{t("My Active Tickets")}</span>
-            <p className="text-lg font-bold font-heading text-emerald-700">{citizenGrievances.length} {t("Registered")}</p>
+              <h2 className="text-xl sm:text-2xl font-bold font-heading uppercase text-slate-900 tracking-tight">
+                {t("Namaste, {{name}}!", { name: citizenDisplayName })}
+              </h2>
+              <p className="text-xs text-slate-500 max-w-xl leading-relaxed">
+                {t("Welcome to the Karimnagar Municipal Corporation Public Services & Grievance Portal. Access civic facilities, track live ward works, and resolve grievances directly with your local administration.")}
+              </p>
+
+              <div className="pt-2 flex flex-wrap items-center gap-5 text-xs">
+                <div>
+                  <span className="text-[11px] text-slate-500 uppercase font-bold block">{t("My Registered Tickets")}</span>
+                  <p className="text-lg font-bold font-heading text-emerald-700">{citizenGrievances.length} {t("Active")}</p>
+                </div>
+                <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+                <div>
+                  <span className="text-[11px] text-slate-500 uppercase font-bold block">{t("Ward Population")}</span>
+                  <p className="text-lg font-bold font-heading text-slate-800">{citizenWard.population ? citizenWard.population.toLocaleString() : '8,500'}</p>
+                </div>
+                <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+                <div>
+                  <span className="text-[11px] text-slate-500 uppercase font-bold block">{t("Civic Rating")}</span>
+                  <p className="text-lg font-bold font-heading text-blue-700">{citizenWard.grade} ({citizenWard.score}/100)</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Elected Corporator Details Card */}
+            <div className="lg:col-span-5 bg-gradient-to-br from-slate-50 to-blue-50/70 rounded-xl p-4 border border-blue-150 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-blue-100 pb-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-kmc-navy text-amber-300 font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
+                    {corporatorName.replace(/^(Sri|Smt)\.?\s+/i, '').split(' ').slice(0, 2).map(p => p[0]).join('') || 'CP'}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-kmc-navy block">
+                      {t("Elected Ward Corporator")}
+                    </span>
+                    <h4 className="text-sm font-bold text-slate-900 leading-snug">
+                      {t(corporatorName)}
+                    </h4>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full shrink-0">
+                  {t("Active Term")}
+                </span>
+              </div>
+
+              <div className="space-y-1.5 text-xs text-slate-700">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{t("Jurisdiction")}:</span>
+                  </span>
+                  <span className="font-semibold text-slate-900">Ward {citizenWard.id} ({citizenWard.name})</span>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{t("Ward Helpline")}:</span>
+                  </span>
+                  <a
+                    href={`tel:+9190000${String(citizenWard.id).padStart(2, '0')}001`}
+                    className="font-mono font-bold text-kmc-navy hover:underline"
+                  >
+                    +91 90000 {String(citizenWard.id).padStart(2, '0')}001
+                  </a>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{t("Office")}:</span>
+                  </span>
+                  <span className="text-slate-700 text-right truncate max-w-[200px]">
+                    Ward {citizenWard.id} Citizen Service Center
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{t("Office Hours")}:</span>
+                  </span>
+                  <span className="text-slate-700">Mon–Sat, 09:30 AM – 05:30 PM</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -259,7 +348,7 @@ export const CitizenPage: React.FC = () => {
             <div className="lg:col-span-4 bg-white rounded-xl shadow-card border border-slate-200 p-5">
               <div className="border-b border-slate-100 pb-2 mb-3">
                 <h4 className="text-xs font-bold font-heading uppercase text-slate-800">{t("Ward Development Overview")}</h4>
-                <p className="text-[11px] text-slate-500">{t("Ward 27")}</p>
+                <p className="text-[11px] text-slate-500">{t(currentUser?.assignedWardName || `Ward ${citizenWard.id} – ${citizenWard.name}`)}</p>
               </div>
               <DonutChart data={developmentBreakdown} height={210} innerRadius={50} outerRadius={75} showLegend={true} />
             </div>
