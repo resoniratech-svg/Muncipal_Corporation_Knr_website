@@ -168,22 +168,77 @@ export const FieldStaffTasksPage: React.FC = () => {
           </div>
 
           <div className="flex gap-2 text-center shrink-0">
-            <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 min-w-[70px]">
-              <p className="text-xl font-bold text-slate-900">{assignedTasks.length}</p>
-              <p className="text-[11px] text-slate-500 font-semibold uppercase">{t('Total')}</p>
-            </div>
-            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 min-w-[70px]">
-              <p className="text-xl font-bold text-amber-700">{pending.length}</p>
-              <p className="text-[11px] text-amber-800 font-semibold uppercase">{t('Pending')}</p>
-            </div>
-            <div className="rounded-xl bg-blue-50 border border-blue-200 px-3 py-2 min-w-[70px]">
-              <p className="text-xl font-bold text-blue-700">{inProgress.length}</p>
-              <p className="text-[11px] text-blue-800 font-semibold uppercase">{t('Progress')}</p>
-            </div>
-            <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 min-w-[70px]">
-              <p className="text-xl font-bold text-emerald-700">{done.length}</p>
-              <p className="text-[11px] text-emerald-800 font-semibold uppercase">{t('Done')}</p>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('all');
+                const el = document.getElementById('staff-tasks-queue-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className={`rounded-xl px-3 py-2 min-w-[70px] text-center transition-all cursor-pointer hover:-translate-y-0.5 ${
+                activeTab === 'all'
+                  ? 'bg-slate-900 text-white ring-2 ring-slate-900 shadow-sm'
+                  : 'bg-slate-50 border border-slate-200 hover:bg-slate-100'
+              }`}
+              title={t('View all tasks')}
+            >
+              <p className={`text-xl font-bold ${activeTab === 'all' ? 'text-white' : 'text-slate-900'}`}>{assignedTasks.length}</p>
+              <p className={`text-[11px] font-semibold uppercase ${activeTab === 'all' ? 'text-slate-300' : 'text-slate-500'}`}>{t('Total')}</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('pending');
+                const el = document.getElementById('staff-tasks-queue-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className={`rounded-xl px-3 py-2 min-w-[70px] text-center transition-all cursor-pointer hover:-translate-y-0.5 ${
+                activeTab === 'pending'
+                  ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-600 shadow-sm'
+                  : 'bg-amber-50 border border-amber-200 hover:bg-amber-100'
+              }`}
+              title={t('Filter pending tasks')}
+            >
+              <p className={`text-xl font-bold ${activeTab === 'pending' ? 'text-slate-950' : 'text-amber-700'}`}>{pending.length}</p>
+              <p className={`text-[11px] font-semibold uppercase ${activeTab === 'pending' ? 'text-amber-950' : 'text-amber-800'}`}>{t('Pending')}</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('in_progress');
+                const el = document.getElementById('staff-tasks-queue-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className={`rounded-xl px-3 py-2 min-w-[70px] text-center transition-all cursor-pointer hover:-translate-y-0.5 ${
+                activeTab === 'in_progress'
+                  ? 'bg-blue-600 text-white ring-2 ring-blue-700 shadow-sm'
+                  : 'bg-blue-50 border border-blue-200 hover:bg-blue-100'
+              }`}
+              title={t('Filter in-progress tasks')}
+            >
+              <p className={`text-xl font-bold ${activeTab === 'in_progress' ? 'text-white' : 'text-blue-700'}`}>{inProgress.length}</p>
+              <p className={`text-[11px] font-semibold uppercase ${activeTab === 'in_progress' ? 'text-blue-200' : 'text-blue-800'}`}>{t('Progress')}</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('completed');
+                const el = document.getElementById('staff-tasks-queue-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className={`rounded-xl px-3 py-2 min-w-[70px] text-center transition-all cursor-pointer hover:-translate-y-0.5 ${
+                activeTab === 'completed'
+                  ? 'bg-emerald-600 text-white ring-2 ring-emerald-700 shadow-sm'
+                  : 'bg-emerald-50 border border-emerald-200 hover:bg-emerald-100'
+              }`}
+              title={t('Filter completed tasks')}
+            >
+              <p className={`text-xl font-bold ${activeTab === 'completed' ? 'text-white' : 'text-emerald-700'}`}>{done.length}</p>
+              <p className={`text-[11px] font-semibold uppercase ${activeTab === 'completed' ? 'text-emerald-200' : 'text-emerald-800'}`}>{t('Done')}</p>
+            </button>
           </div>
         </section>
 
@@ -220,7 +275,7 @@ export const FieldStaffTasksPage: React.FC = () => {
         </div>
 
         {/* Tasks List */}
-        <section className="space-y-4">
+        <section id="staff-tasks-queue-section" className="scroll-mt-24 space-y-4">
           {displayedTasks.length === 0 ? (
             <div className="bg-white rounded-2xl p-8 text-center border-2 border-dashed border-slate-300 text-sm text-slate-600">
               {t('No tasks currently in this queue for Ward')} {staffWardId}. {t('All work is up to date.')}

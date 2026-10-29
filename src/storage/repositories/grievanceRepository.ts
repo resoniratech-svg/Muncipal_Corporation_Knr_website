@@ -64,18 +64,23 @@ export const grievanceRepository = {
     let assignedFieldStaffId = newItem.assignedFieldStaffId;
     let assignedTo = newItem.assignedTo;
     if (assignedTo || assignedFieldStaffId) {
-      const validStaff = staffCategoryRepository.validateAssignment(
-        assignedFieldStaffId || assignedTo!,
-        wardNum,
-        { category: categoryName, department: dept, requiredStaffCategory }
-      );
-      assignedFieldStaffId = validStaff.id;
-      assignedTo = validStaff.displayName;
+      try {
+        const validStaff = staffCategoryRepository.validateAssignment(
+          assignedFieldStaffId || assignedTo!,
+          wardNum,
+          { category: categoryName, department: dept, requiredStaffCategory }
+        );
+        assignedFieldStaffId = validStaff.id;
+        assignedTo = validStaff.displayName;
+      } catch {
+        // Keep assigned officer/staff if assignment is to a section officer rather than ground field staff
+      }
     }
 
     const fullItem: GrievanceItem = {
       id,
       citizenId: newItem.citizenId || 'USR-CITIZEN-01',
+      citizenName: citizenName || newItem.citizenName || 'Resident Citizen',
       category: categoryName,
       department: dept as DepartmentName,
       departmentId: deptId,

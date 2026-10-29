@@ -9,6 +9,7 @@ import { INITIAL_GRIEVANCES, INITIAL_TASKS } from '../data/grievances';
 import { INITIAL_NOTIFICATIONS } from '../data/notifications';
 import { WARD_27_PROJECTS } from '../data/budget';
 import { clearStoredPhotos, resolvePhoto } from '../photos/photoStore';
+import { getStoredPayments } from '../data/payments';
 
 // Extended demo users including Citizen 2 for isolation testing
 export const EXTENDED_DEMO_USERS = {
@@ -310,6 +311,7 @@ export function healDepartments(): void {
   const grievances = storageService.getItem<any[]>(STORAGE_KEYS.GRIEVANCES);
   if (Array.isArray(grievances)) {
     let changed = false;
+    const existingIds = new Set(grievances.map((g) => g.id));
     const updated = grievances.map((g) => {
       const d = g.department || '';
       let newDept = d;
@@ -326,6 +328,13 @@ export function healDepartments(): void {
       return g;
     });
 
+    // Merge any missing departmental grievances into the user's storage
+    const missingGrievances = INITIAL_GRIEVANCES.filter((g) => !existingIds.has(g.id));
+    if (missingGrievances.length > 0) {
+      updated.push(...missingGrievances);
+      changed = true;
+    }
+
     if (changed) {
       storageService.setItem(STORAGE_KEYS.GRIEVANCES, updated);
     }
@@ -334,6 +343,7 @@ export function healDepartments(): void {
   const tasks = storageService.getItem<any[]>(STORAGE_KEYS.TASKS);
   if (Array.isArray(tasks)) {
     let tasksChanged = false;
+    const existingTaskIds = new Set(tasks.map((t) => t.id));
     const updatedTasks = tasks.map((t) => {
       const dept = t.department || '';
       let newDept = dept;
@@ -350,8 +360,18 @@ export function healDepartments(): void {
       return t;
     });
 
+    // Merge any missing departmental tasks into the user's storage
+    const missingTasks = INITIAL_TASKS.filter((t) => !existingTaskIds.has(t.id));
+    if (missingTasks.length > 0) {
+      updatedTasks.push(...missingTasks);
+      tasksChanged = true;
+    }
+
     if (tasksChanged) {
       storageService.setItem(STORAGE_KEYS.TASKS, updatedTasks);
     }
   }
+
+  // Ensure citizen payments ledger is populated
+  getStoredPayments();
 }

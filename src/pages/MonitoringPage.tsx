@@ -29,6 +29,15 @@ export const MonitoringPage: React.FC = () => {
     { step: 6, title: t("Step 6: Issue Resolved & Closed"), desc: t("Photo proof uploaded, citizen notified & feedback recorded") },
   ];
 
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.classList.add('ring-4', 'ring-kmc-navy/30', 'transition-all', 'duration-500');
+      setTimeout(() => el.classList.remove('ring-4', 'ring-kmc-navy/30'), 1500);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-kmc-bg">
       <BannerStrip
@@ -50,18 +59,24 @@ export const MonitoringPage: React.FC = () => {
             value="12,842"
             sublabel={t("Central Repository (May)")}
             highlightColor="border-l-kmc-navy"
+            onClick={() => scrollToSection('performance-report-section')}
+            actionHint="View Performance Table →"
           />
           <KpiCard
             label={t("Resolved Complaints")}
             value="10,328"
             sublabel={t("Verified with Evidence")}
             highlightColor="border-l-emerald-600"
+            onClick={() => scrollToSection('performance-report-section')}
+            actionHint="Inspect Resolution Rate →"
           />
           <KpiCard
             label={t("In Progress")}
             value="2,014"
             sublabel={t("Active Operations")}
             highlightColor="border-l-blue-600"
+            onClick={() => scrollToSection('audit-trail-section')}
+            actionHint="View Real-Time Audit Log →"
           />
           <KpiCard
             label={t("Critical SLA Breaches")}
@@ -70,6 +85,8 @@ export const MonitoringPage: React.FC = () => {
             delta={t("Urgent")}
             deltaType="negative"
             highlightColor="border-l-red-600"
+            onClick={() => scrollToSection('escalation-workflow-section')}
+            actionHint="Inspect Escalation Flow →"
           />
         </section>
 
@@ -145,7 +162,7 @@ export const MonitoringPage: React.FC = () => {
         </section>
 
         {/* Monthly Performance Report Table */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5">
+        <section id="performance-report-section" className="bg-white rounded-xl shadow-card border border-slate-200 p-5 scroll-mt-20">
           <div className="border-b border-slate-100 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <span className="text-[11px] font-bold uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
@@ -216,7 +233,7 @@ export const MonitoringPage: React.FC = () => {
         </section>
 
         {/* 6-Step Escalation Workflow */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5">
+        <section id="escalation-workflow-section" className="bg-white rounded-xl shadow-card border border-slate-200 p-5 scroll-mt-20">
           <div className="border-b border-slate-100 pb-3 mb-4">
             <h4 className="text-xs font-bold font-heading uppercase text-slate-800">
               {t("6-Step Automated Escalation Flow")}
@@ -246,7 +263,7 @@ export const MonitoringPage: React.FC = () => {
         </section>
 
         {/* Live System Governance Audit Trail */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5">
+        <section id="audit-trail-section" className="bg-white rounded-xl shadow-card border border-slate-200 p-5 scroll-mt-20">
           <div className="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
             <div>
               <span className="text-[11px] font-bold uppercase text-kmc-navy bg-blue-50 px-2 py-0.5 rounded">

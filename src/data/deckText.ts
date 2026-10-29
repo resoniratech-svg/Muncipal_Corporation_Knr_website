@@ -457,11 +457,11 @@ export const DECK_SLIDES: DeckSlide[] = [
         title: "Performance Improvement Action Plan",
         headers: ["KPI", "Current", "Target", "Action Plan", "Responsible Dept.", "Deadline"],
         rows: [
-          ["Grievance Resolution Time", "2.4 Days", "≤ 2 Days", "Improve field response & faster escalation", "Sanitation Department", "30 Jun 2024"],
-          ["Issues Resolved", "86%", "≥ 90%", "Increase manpower & monitor pending cases", "Health Department", "30 Jun 2024"],
-          ["Quality of Work", "4.3 / 5", "≥ 4.5 / 5", "Ensure quality checks & citizen feedback", "Engineering Department", "30 Jun 2024"],
-          ["Budget Utilization", "78%", "≥ 90%", "Plan better & avoid fund under-utilization", "Finance Department", "30 Jun 2024"],
-          ["Cleanliness & Infra. Score", "80%", "≥ 90%", "Increase cleaning frequency & maintenance", "Sanitation Department", "30 Jun 2024"],
+          ["Grievance Resolution Time", "2.4 Days", "≤ 2 Days", "Improve field response & faster escalation", "Sanitation Section", "30 Jun 2024"],
+          ["Issues Resolved", "86%", "≥ 90%", "Increase manpower & monitor pending cases", "Sanitation Section", "30 Jun 2024"],
+          ["Quality of Work", "4.3 / 5", "≥ 4.5 / 5", "Ensure quality checks & citizen feedback", "Engineering Section", "30 Jun 2024"],
+          ["Budget Utilization", "78%", "≥ 90%", "Plan better & avoid fund under-utilization", "Revenue Section", "30 Jun 2024"],
+          ["Cleanliness & Infra. Score", "80%", "≥ 90%", "Increase cleaning frequency & maintenance", "Sanitation Section", "30 Jun 2024"],
         ],
       },
     ],
@@ -698,7 +698,7 @@ export const DECK_SLIDES: DeckSlide[] = [
         items: [
           { title: "1. Citizen Submission", text: "Citizen raises a complaint through the portal/app. Provides location, category, description and photo evidence. → Complaint ID Generated & Acknowledgement Sent to Citizen" },
           { title: "2. Ward-Level Routing (Corporator Level)", text: "Grievance is routed to the respective Ward Corporator. Corporator reviews, validates and categorizes the issue. → Issue Validated & Forwarded to Department" },
-          { title: "3. Department Allocation", text: "Corporator assigns the issue to the concerned municipal department. Drainage issue → Engineering Department; Garbage issue → Sanitation Department. → Task Assigned & Department with Timeline" },
+          { title: "3. Department Allocation", text: "Corporator assigns the issue to the concerned municipal section. Drainage/Roads issue → Engineering Section; Garbage issue → Sanitation Section. → Task Assigned & Section with Timeline" },
           { title: "4. Department Execution", text: "Department receives the task with defined timelines. Work is executed and updated in real time with proof (images/status). → Work Completed & Proof Uploaded" },
           { title: "5. Monitoring & Escalation", text: "System monitors progress in real time. If delays occur, automatic escalation is triggered to higher authorities. Full visibility at Municipal Commissioner and Mayor level. → Escalation Ensures Timely Resolution & Accountability" },
         ],
@@ -706,10 +706,13 @@ export const DECK_SLIDES: DeckSlide[] = [
       {
         heading: "Department Assignment",
         items: [
-          { title: "Engineering", text: "Drainage, Roads" },
-          { title: "Sanitation", text: "Garbage, Cleaning" },
-          { title: "Water Supply", text: "Water, Leakage" },
-          { title: "Others", text: "Electrical, Parks, etc." },
+          { title: "Engineering Section", text: "Drainage, Roads, Water Supply, Street Lights" },
+          { title: "Sanitation Section", text: "Garbage, Cleaning, Public Health Fogging" },
+          { title: "Revenue Section", text: "Property Tax, Vacant Land Tax (VLT)" },
+          { title: "Town Planning Section (TPS)", text: "Building Permissions, City Layouts" },
+          { title: "Establishment Section", text: "General Administration, Staff Postings" },
+          { title: "Statistics / Birth & Death Section", text: "Civil Registry, Birth & Death Certificates" },
+          { title: "Urban Welfare / MEPMA Section", text: "MEPMA Self-Help Groups, Asara Pensions" },
         ],
       },
       {

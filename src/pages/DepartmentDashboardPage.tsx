@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { BannerStrip } from '../components/common/BannerStrip';
 import { FooterStrip } from '../components/common/FooterStrip';
 import { StatusChip } from '../components/common/StatusChip';
@@ -11,12 +11,13 @@ import {
   MapPin, Check, Filter, UserCheck, ChevronRight, UserPlus, X, ShieldAlert,
   ChevronDown, ChevronUp, Waves, Construction, Trash2, Lightbulb, Droplet,
   Search, ArrowUpDown, Calendar, Eye, CheckCheck, RefreshCw, Layers,
-  Banknote, FileText, HeartPulse, Users
+  Banknote, FileText, HeartPulse, Users, Receipt, Landmark
 } from 'lucide-react';
 import { SearchableSelect } from '../components/common/SearchableSelect';
 import { userRepository, staffCategoryRepository } from '../storage';
 import { usePrefs } from '../i18n';
 import { GrievanceItem } from '../data/grievances';
+import { getPaymentsForSection } from '../data/payments';
 
 export interface CategoryMeta {
   key: string;
@@ -174,6 +175,28 @@ export const CATEGORY_DEFINITIONS: Record<string, CategoryMeta> = {
     badgeText: 'text-pink-900',
     defaultSla: 72,
   },
+  'vlt-tax': {
+    key: 'vlt-tax',
+    name: 'Vacant Land Tax (VLT)',
+    department: 'Revenue Section',
+    icon: Landmark,
+    color: 'text-teal-700',
+    borderAccent: 'border-l-teal-600',
+    badgeBg: 'bg-teal-50 border-teal-200',
+    badgeText: 'text-teal-900',
+    defaultSla: 48,
+  },
+  'trade-license': {
+    key: 'trade-license',
+    name: 'Trade License & Commercial',
+    department: 'Revenue Section',
+    icon: Receipt,
+    color: 'text-purple-700',
+    borderAccent: 'border-l-purple-600',
+    badgeBg: 'bg-purple-50 border-purple-200',
+    badgeText: 'text-purple-900',
+    defaultSla: 48,
+  },
 };
 
 export function resolveCategoryKey(g: GrievanceItem): string {
@@ -185,12 +208,14 @@ export function resolveCategoryKey(g: GrievanceItem): string {
   if (c.includes('water') || c.includes('pipe') || d.includes('water') || d.includes('pipe') || c.includes('leak')) return 'water-supply';
   if (c.includes('garbage') || c.includes('waste') || c.includes('sanitation') || c.includes('clean')) return 'sanitation';
   if (c.includes('pest') || c.includes('fogging') || d.includes('mosquito')) return 'public-health';
-  if (c.includes('building') || c.includes('layout') || c.includes('permission')) return 'building-perm';
+  if (c.includes('building') || c.includes('layout') || c.includes('permission') || c.includes('tgbpass') || c.includes('tg-bpass')) return 'building-perm';
   if (c.includes('park') || c.includes('green') || d.includes('tree')) return 'parks';
-  if (c.includes('tax') || c.includes('revenue') || c.includes('property')) return 'property-tax';
+  if (c.includes('vacant') || c.includes('vlt') || d.includes('vacant') || d.includes('vlt')) return 'vlt-tax';
+  if (c.includes('trade') || c.includes('commercial') || d.includes('trade')) return 'trade-license';
+  if (c.includes('tax') || c.includes('revenue') || c.includes('property') || c.includes('house')) return 'property-tax';
   if (c.includes('staff') || c.includes('posting') || c.includes('hr')) return 'staff-postings';
-  if (c.includes('birth') || c.includes('death') || c.includes('certificate')) return 'certificates';
-  if (c.includes('pension') || c.includes('asara') || c.includes('mepma')) return 'asara-pension';
+  if (c.includes('birth') || c.includes('death') || c.includes('certificate') || d.includes('birth') || d.includes('death')) return 'certificates';
+  if (c.includes('pension') || c.includes('asara') || c.includes('mepma') || c.includes('shg') || c.includes('vendor')) return 'asara-pension';
   return 'civil';
 }
 
@@ -217,11 +242,13 @@ const SECTION_DEFAULT_CATEGORIES: Record<string, { key: string; label: string; i
     { key: 'public-health', label: 'Public Health & Fogging', icon: HeartPulse },
   ],
   'Town Planning Section (TPS)': [
-    { key: 'building-perm', label: 'Building Permissions', icon: Building },
+    { key: 'building-perm', label: 'Building Permissions (TG-bPASS)', icon: Building },
     { key: 'parks', label: 'Parks & Greening', icon: Building },
   ],
   'Revenue Section': [
     { key: 'property-tax', label: 'Property Tax (House Tax)', icon: Banknote },
+    { key: 'vlt-tax', label: 'Vacant Land Tax (VLT)', icon: Landmark },
+    { key: 'trade-license', label: 'Trade License & Commercial', icon: Receipt },
   ],
   'Establishment Section': [
     { key: 'staff-postings', label: 'Staff Postings & HR', icon: UserCheck },
@@ -257,7 +284,7 @@ export const DepartmentDashboardPage: React.FC = () => {
 
   const [selectedSection, setSelectedSection] = useState<string>(() => {
     try {
-      return sessionStorage.getItem('kmc_dept_selected_section') || initialSection;
+      return sessionStorage.getItem(`kmc_dept_selected_section_${currentUser?.id || 'default'}`) || initialSection;
     } catch {
       return initialSection;
     }
@@ -266,13 +293,27 @@ export const DepartmentDashboardPage: React.FC = () => {
   const handleSectionChange = (newSec: string) => {
     setSelectedSection(newSec);
     try {
-      sessionStorage.setItem('kmc_dept_selected_section', newSec);
+      sessionStorage.setItem(`kmc_dept_selected_section_${currentUser?.id || 'default'}`, newSec);
     } catch {}
     const defaultCats = SECTION_DEFAULT_CATEGORIES[newSec] || SECTION_DEFAULT_CATEGORIES['Engineering Section'];
     if (defaultCats && defaultCats.length > 0) {
       setActiveCategoryKey(defaultCats[0].key);
     }
   };
+
+  // Automatically sync section and default category when initialSection / current officer changes
+  useEffect(() => {
+    if (initialSection) {
+      setSelectedSection(initialSection);
+      try {
+        sessionStorage.setItem(`kmc_dept_selected_section_${currentUser?.id || 'default'}`, initialSection);
+      } catch {}
+      const defaultCats = SECTION_DEFAULT_CATEGORIES[initialSection] || SECTION_DEFAULT_CATEGORIES['Engineering Section'];
+      if (defaultCats && defaultCats.length > 0) {
+        setActiveCategoryKey(defaultCats[0].key);
+      }
+    }
+  }, [currentUser?.id, initialSection]);
 
   const sectionOptions = useMemo(() => {
     return MCK_SECTIONS.map((sec) => ({
@@ -298,8 +339,26 @@ export const DepartmentDashboardPage: React.FC = () => {
     } catch {}
   };
 
-  // 2. Active Category Tab State (per hand-drawn layout)
-  const [activeCategoryKey, setActiveCategoryKey] = useState<string>('drainage');
+  // 2. Active Category Tab State (dynamically defaults to current section's primary category)
+  const [activeCategoryKey, setActiveCategoryKey] = useState<string>(() => {
+    try {
+      const sec = sessionStorage.getItem(`kmc_dept_selected_section_${currentUser?.id || 'default'}`) || initialSection;
+      const initialCats = SECTION_DEFAULT_CATEGORIES[sec] || SECTION_DEFAULT_CATEGORIES['Engineering Section'];
+      return initialCats[0]?.key || 'drainage';
+    } catch {
+      return 'drainage';
+    }
+  });
+
+  // Whenever selectedSection changes, ensure activeCategoryKey is valid for this section
+  useEffect(() => {
+    const defaultCats = SECTION_DEFAULT_CATEGORIES[selectedSection] || SECTION_DEFAULT_CATEGORIES['Engineering Section'];
+    if (defaultCats && defaultCats.length > 0) {
+      if (!defaultCats.some((c) => c.key === activeCategoryKey)) {
+        setActiveCategoryKey(defaultCats[0].key);
+      }
+    }
+  }, [selectedSection, activeCategoryKey]);
 
   // 3. Status Filter State (per hand-drawn layout; completed unified under resolved)
   const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'In Progress' | 'Resolved' | 'Overdue'>('all');
@@ -322,6 +381,11 @@ export const DepartmentDashboardPage: React.FC = () => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
+
+  // Reconciled payments & collections for Revenue Section or Engineering Section
+  const sectionPayments = useMemo(() => {
+    return getPaymentsForSection(selectedSection, selectedWard === 'all' ? undefined : parseInt(selectedWard, 10));
+  }, [selectedSection, selectedWard]);
 
   // Department-wide grievances belonging strictly to selected section
   const deptGrievancesAll = useMemo(() => {
@@ -483,6 +547,15 @@ export const DepartmentDashboardPage: React.FC = () => {
 
     return [...base, ...extras];
   }, [wardFilteredGrievances, selectedSection]);
+
+  // Keep active category synced whenever availableCategories or selectedSection changes
+  useEffect(() => {
+    if (!availableCategories.some((c) => c.key === activeCategoryKey)) {
+      if (availableCategories.length > 0) {
+        setActiveCategoryKey(availableCategories[0].key);
+      }
+    }
+  }, [availableCategories, activeCategoryKey]);
 
   // Active category metadata
   const activeCategoryMeta = useMemo(() => {
@@ -670,18 +743,142 @@ export const DepartmentDashboardPage: React.FC = () => {
                 </span>
               </div>
               <div className="h-6 w-px bg-slate-200" />
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">{t('Total')}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter('all');
+                  const el = document.getElementById('filtered-grievance-table');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    el.classList.add('ring-4', 'ring-kmc-navy/30');
+                    setTimeout(() => el.classList.remove('ring-4', 'ring-kmc-navy/30'), 1500);
+                  }
+                }}
+                className={`text-left group cursor-pointer px-2 py-1 rounded-lg transition-all ${
+                  statusFilter === 'all' ? 'bg-blue-50 ring-1 ring-kmc-navy/40 shadow-xs' : 'hover:bg-slate-100'
+                }`}
+                title={t('Show all grievances')}
+              >
+                <span className="text-[10px] uppercase font-bold text-slate-500 block group-hover:text-kmc-navy">{t('Total')}</span>
                 <span className="font-bold font-mono text-kmc-navy text-sm">{totalCount}</span>
-              </div>
+              </button>
               <div className="h-6 w-px bg-slate-200" />
-              <div>
-                <span className="text-[10px] uppercase font-bold text-amber-700 block">{t('Pending')}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter('Pending');
+                  const el = document.getElementById('filtered-grievance-table');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    el.classList.add('ring-4', 'ring-amber-400/40');
+                    setTimeout(() => el.classList.remove('ring-4', 'ring-amber-400/40'), 1500);
+                  }
+                }}
+                className={`text-left group cursor-pointer px-2 py-1 rounded-lg transition-all ${
+                  statusFilter === 'Pending' ? 'bg-amber-100 ring-2 ring-amber-500 shadow-xs' : 'hover:bg-amber-50'
+                }`}
+                title={t('Filter pending grievances')}
+              >
+                <span className="text-[10px] uppercase font-bold text-amber-700 block group-hover:text-amber-900">{t('Pending')}</span>
                 <span className="font-bold font-mono text-amber-800 text-sm">{pendingCount}</span>
-              </div>
+              </button>
             </div>
           </div>
         </section>
+
+        {/* Special Ledger: Municipal Tax Collections & Reconciled Receipts for Revenue / Engineering */}
+        {(selectedSection.includes('Revenue') || selectedSection.includes('Engineering')) && (
+          <section className="bg-white rounded-xl shadow-card border border-slate-200 p-4 border-l-4 border-l-emerald-600 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <Landmark className="w-4 h-4" />
+                </span>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold font-heading uppercase text-slate-900">
+                    {selectedSection.includes('Revenue')
+                      ? t("Revenue Section · Municipal Tax Collections & Reconciled Ledger")
+                      : t("Engineering Section · Water Supply Charges Collection Ledger")
+                    }
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {selectedSection.includes('Revenue')
+                      ? t("Reconciled in General Revenue Treasury Account (MCK-REV-TREASURY-01) • SBI Collectorate Branch")
+                      : t("Reconciled in Water Works O&M Account (MCK-ENG-WATER-02) • SBI Collectorate Branch")
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">{t("Total Settled Collections")}</span>
+                  <span className="text-lg font-mono font-bold text-emerald-700">
+                    ₹{sectionPayments.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
+                  </span>
+                </div>
+                <span className="text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-md">
+                  {sectionPayments.length} {t("Paid Receipts")}
+                </span>
+              </div>
+            </div>
+
+            {sectionPayments.length === 0 ? (
+              <div className="p-4 text-center text-xs text-slate-500 bg-slate-50 rounded-lg">
+                {t("No reconciled payments recorded for the selected ward.")}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="py-2 px-3">{t("Receipt No")}</th>
+                      <th className="py-2 px-3">{t("Tax / Utility Head")}</th>
+                      <th className="py-2 px-3">{t("Payer & Door No")}</th>
+                      <th className="py-2 px-3">{t("Assessment / Ref")}</th>
+                      <th className="py-2 px-3">{t("Amount")}</th>
+                      <th className="py-2 px-3">{t("Credited Account")}</th>
+                      <th className="py-2 px-3">{t("Paid Date & Time")}</th>
+                      <th className="py-2 px-3 text-right">{t("Treasury Status")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-[11px]">
+                    {sectionPayments.map((p) => (
+                      <tr key={p.receiptNo} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-2 px-3 font-mono font-bold text-kmc-navy whitespace-nowrap">
+                          {p.receiptNo}
+                        </td>
+                        <td className="py-2 px-3 font-semibold text-slate-900 whitespace-nowrap">
+                          {t(p.taxType)}
+                        </td>
+                        <td className="py-2 px-3 whitespace-nowrap">
+                          <strong className="text-slate-900">{p.citizenName}</strong>
+                          <span className="text-slate-500 block text-[10px]">Door {p.doorNo}, Ward {p.wardId}</span>
+                        </td>
+                        <td className="py-2 px-3 font-mono text-slate-700 whitespace-nowrap">
+                          {p.refValue}
+                        </td>
+                        <td className="py-2 px-3 font-mono font-bold text-emerald-800 whitespace-nowrap">
+                          ₹{p.amount.toLocaleString()}
+                        </td>
+                        <td className="py-2 px-3 whitespace-nowrap font-mono text-slate-600">
+                          {p.receivingAccount}
+                        </td>
+                        <td className="py-2 px-3 text-slate-600 whitespace-nowrap">
+                          {p.paidTimeStr}
+                        </td>
+                        <td className="py-2 px-3 text-right whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            {t("Reconciled & Credited")}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* C. Category Tabs (Directly below Ward Selector per hand-drawn reference) */}
         <section className="bg-white rounded-xl shadow-card border border-slate-200 p-3 sm:p-4">
@@ -705,7 +902,13 @@ export const DepartmentDashboardPage: React.FC = () => {
                 <button
                   key={cat.key}
                   type="button"
-                  onClick={() => setActiveCategoryKey(cat.key)}
+                  onClick={() => {
+                    setActiveCategoryKey(cat.key);
+                    const el = document.getElementById('filtered-grievance-table');
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-all border ${
                     isActive
                       ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-sm ring-2 ring-amber-400/50 scale-[1.02]'
@@ -812,7 +1015,7 @@ export const DepartmentDashboardPage: React.FC = () => {
         </section>
 
         {/* E. Filtered Grievance List (Clean compact table below status filter per sketch) */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden">
+        <section id="filtered-grievance-table" className="scroll-mt-24 bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden">
           {/* Active Category Header Bar */}
           <div className="p-3.5 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -863,9 +1066,14 @@ export const DepartmentDashboardPage: React.FC = () => {
                         {g.id}
                       </td>
                       <td className="py-3 px-3 font-semibold text-slate-900 max-w-xs">
-                        {t(g.description)}
+                        {g.category && g.category !== activeCategoryMeta.name && (
+                          <span className="inline-block px-2 py-0.5 mb-1 rounded text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                            {t(g.category)}
+                          </span>
+                        )}
+                        <p className="line-clamp-2">{t(g.description)}</p>
                         <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
-                          {t('Reported')}: {g.reportedOn}
+                          {t('Reported')}: {g.reportedOn} {g.citizenName ? `• ${t('Applicant')}: ${g.citizenName}` : ''}
                         </span>
                       </td>
                       <td className="py-3 px-3 whitespace-nowrap">

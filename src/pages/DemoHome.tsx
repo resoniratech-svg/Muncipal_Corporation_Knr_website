@@ -400,23 +400,34 @@ export const DemoHome: React.FC = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
             {(dataMode === 'deck-exact'
               ? [
-                  { label: 'Total Complaints', value: '1,245', delta: '▲12%' },
-                  { label: 'In Progress', value: '320', delta: '▲8%' },
-                  { label: 'Resolved', value: '925', delta: '▲15%' },
-                  { label: 'Open', value: '180', delta: '▼5%' },
+                  { label: 'Total Complaints', value: '1,245', delta: '▲12%', target: '/leadership' },
+                  { label: 'In Progress', value: '320', delta: '▲8%', target: '/ward' },
+                  { label: 'Resolved', value: '925', delta: '▲15%', target: '/monitoring' },
+                  { label: 'Open', value: '180', delta: '▼5%', target: '/leadership' },
                 ]
               : [
-                  { label: 'Total Complaints', value: '12,458', delta: '' },
-                  { label: 'In Progress', value: '1,874', delta: '' },
-                  { label: 'Resolved', value: '10,234', delta: '' },
-                  { label: 'Overdue', value: '350', delta: '' },
+                  { label: 'Total Complaints', value: '12,458', delta: '', target: '/leadership' },
+                  { label: 'In Progress', value: '1,874', delta: '', target: '/ward' },
+                  { label: 'Resolved', value: '10,234', delta: '', target: '/monitoring' },
+                  { label: 'Overdue', value: '350', delta: '', target: '/leadership' },
                 ]
             ).map((m) => (
-              <div key={m.label} className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                <span className="text-[11px] uppercase font-bold text-slate-500 block font-heading">{t(m.label)}</span>
-                <span className="text-xl font-bold font-heading text-slate-900">{m.value}</span>
-                {m.delta && <span className="ml-2 text-[11px] font-semibold text-slate-600">{m.delta}</span>}
-              </div>
+              <button
+                key={m.label}
+                type="button"
+                onClick={() => navigate(m.target)}
+                className="p-3 rounded-xl bg-slate-50 hover:bg-white hover:border-kmc-navy/50 border border-slate-200 text-left transition-all cursor-pointer group hover:-translate-y-1 hover:shadow-md active:scale-95"
+                title={t("View in {{target}}", { target: m.target })}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase font-bold text-slate-500 block font-heading group-hover:text-kmc-navy transition-colors">{t(m.label)}</span>
+                  <span className="text-[10px] text-kmc-navy opacity-0 group-hover:opacity-100 transition-opacity">↗</span>
+                </div>
+                <div className="flex items-baseline gap-2 mt-0.5">
+                  <span className="text-xl font-bold font-heading text-slate-900">{m.value}</span>
+                  {m.delta && <span className="text-[11px] font-semibold text-slate-600">{m.delta}</span>}
+                </div>
+              </button>
             ))}
           </div>
 

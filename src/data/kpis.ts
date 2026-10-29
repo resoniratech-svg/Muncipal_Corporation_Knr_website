@@ -48,7 +48,7 @@ export const ACTION_PLAN_PAGE_8: ActionPlanItem[] = [
     current: "2.4 Days",
     target: "≤ 2 Days",
     actionPlan: "Improve field response & faster escalation",
-    department: "Sanitation Department",
+    department: "Sanitation Section",
     deadline: "30 Jun 2024",
   },
   {
@@ -56,7 +56,7 @@ export const ACTION_PLAN_PAGE_8: ActionPlanItem[] = [
     current: "86%",
     target: "≥ 90%",
     actionPlan: "Increase manpower & monitor pending cases",
-    department: "Health Department",
+    department: "Sanitation Section",
     deadline: "30 Jun 2024",
   },
   {
@@ -64,7 +64,7 @@ export const ACTION_PLAN_PAGE_8: ActionPlanItem[] = [
     current: "4.3 / 5",
     target: "≥ 4.5 / 5",
     actionPlan: "Ensure quality checks & citizen feedback",
-    department: "Engineering Department",
+    department: "Engineering Section",
     deadline: "30 Jun 2024",
   },
   {
@@ -72,7 +72,7 @@ export const ACTION_PLAN_PAGE_8: ActionPlanItem[] = [
     current: "78%",
     target: "≥ 90%",
     actionPlan: "Plan better & avoid fund under-utilization",
-    department: "Finance Department",
+    department: "Revenue Section",
     deadline: "30 Jun 2024",
   },
   {
@@ -80,7 +80,7 @@ export const ACTION_PLAN_PAGE_8: ActionPlanItem[] = [
     current: "80%",
     target: "≥ 90%",
     actionPlan: "Increase cleaning frequency & maintenance",
-    department: "Sanitation Department",
+    department: "Sanitation Section",
     deadline: "30 Jun 2024",
   },
 ];

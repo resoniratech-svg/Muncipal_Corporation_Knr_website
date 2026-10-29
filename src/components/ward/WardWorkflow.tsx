@@ -44,7 +44,7 @@ export const NewComplaintsQueue: React.FC<{ wardId: number }> = ({ wardId }) => 
   );
 
   return (
-    <section data-tour="new-complaints" className="bg-white rounded-xl shadow-card border border-slate-200 p-5">
+    <section id="new-complaints-section" data-tour="new-complaints" className="bg-white rounded-xl shadow-card border border-slate-200 p-5 scroll-mt-20">
       <PanelHeader title="New Complaints – Review / Validate / Categorize" help="Check each new complaint and send it to field staff." count={queue.length} />
       {queue.length === 0 ? (
         <p className="text-base text-slate-600">{t('No new complaints waiting. New ones appear here as soon as a citizen reports them.')}</p>
@@ -146,7 +146,7 @@ export const VerificationQueue: React.FC<{ wardId: number }> = ({ wardId }) => {
   const queue = grievances.filter((g) => g.wardId === wardId && g.status === 'Completed');
 
   return (
-    <section data-tour="verify" className="bg-white rounded-xl shadow-card border-2 border-sky-300 p-5">
+    <section id="verification-queue-section" data-tour="verify" className="bg-white rounded-xl shadow-card border-2 border-sky-300 p-5 scroll-mt-20">
       <PanelHeader
         title="Work Completed – Waiting for Verification"
         help="Compare the before and after photos, then approve or send back."

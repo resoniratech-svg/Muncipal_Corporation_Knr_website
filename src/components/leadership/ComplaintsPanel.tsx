@@ -94,7 +94,11 @@ export const ReopenedAlerts: React.FC<{ onOpen: (g: GrievanceItem) => void }> = 
 };
 
 /** Recent complaints with ward dropdown + search; any row opens the read-only viewer. */
-export const RecentComplaints: React.FC<{ onOpen: (g: GrievanceItem) => void }> = ({ onOpen }) => {
+export const RecentComplaints: React.FC<{ 
+  onOpen: (g: GrievanceItem) => void;
+  statusFilter?: 'all' | 'Pending' | 'In Progress' | 'Resolved' | 'Overdue';
+  onStatusFilterChange?: (s: 'all' | 'Pending' | 'In Progress' | 'Resolved' | 'Overdue') => void;
+}> = ({ onOpen, statusFilter = 'all', onStatusFilterChange }) => {
   const { grievances, wards } = useApp();
   const { t } = usePrefs();
   const [ward, setWard] = useState<number | 'all'>('all');
@@ -107,20 +111,56 @@ export const RecentComplaints: React.FC<{ onOpen: (g: GrievanceItem) => void }> 
     return new Set(wards.filter((w) => String(w.id) === q || w.name.toLowerCase().includes(q)).map((w) => w.id));
   }, [query, wards]);
 
-  const list = grievances.filter(
-    (g) => (ward === 'all' || g.wardId === ward) && (!matchingWards || matchingWards.has(g.wardId) || g.id.toLowerCase().includes(query.trim().toLowerCase()))
-  );
+  const list = grievances.filter((g) => {
+    if (ward !== 'all' && g.wardId !== ward) return false;
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'Resolved') {
+        if (g.status !== 'Resolved' && g.status !== 'Completed') return false;
+      } else if (g.status !== statusFilter) {
+        return false;
+      }
+    }
+    if (matchingWards && !matchingWards.has(g.wardId) && !g.id.toLowerCase().includes(query.trim().toLowerCase())) {
+      return false;
+    }
+    return true;
+  });
   const shown = showAll ? list : list.slice(0, 6);
 
   return (
-    <section data-tour="complaints" className="bg-white rounded-xl shadow-card border border-slate-200 p-5">
+    <section id="recent-complaints-section" data-tour="complaints" className="bg-white rounded-xl shadow-card border border-slate-200 p-5 scroll-mt-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 pb-3 mb-4 border-b border-slate-100">
         <div>
-          <h3 className="text-base font-bold font-heading uppercase text-slate-800">{t('Recent Complaints')}</h3>
-          <p className="text-sm text-slate-600 flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold font-heading uppercase text-slate-800">{t('Recent Complaints')}</h3>
+            {statusFilter !== 'all' && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-kmc-navy text-white">
+                {statusFilter} ({list.length})
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-slate-600 flex items-center gap-1.5 mt-0.5">
             <HelpCircle className="w-4 h-4 text-kmc-navy" aria-hidden="true" />
             {t('Tap a complaint to see its before and after photos.')}
           </p>
+
+          {/* Status Filter Badges */}
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            {(['all', 'Pending', 'In Progress', 'Resolved', 'Overdue'] as const).map((st) => (
+              <button
+                key={st}
+                type="button"
+                onClick={() => onStatusFilterChange?.(st)}
+                className={`px-2.5 py-1 rounded text-[11px] font-semibold transition ${
+                  statusFilter === st
+                    ? 'bg-kmc-navy text-white shadow-xs'
+                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                {st === 'all' ? t('All') : t(st)}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="w-full sm:w-80">
           <label className="sr-only" htmlFor="lead-ward">{t('Ward or search')}</label>

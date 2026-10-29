@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BannerStrip } from '../components/common/BannerStrip';
 import { FooterStrip } from '../components/common/FooterStrip';
@@ -74,6 +74,33 @@ export const LeadershipPage: React.FC = () => {
     { name: t("Balance"), value: 100 - budget.percentage, color: "#E2E8F0" },
   ];
 
+  const [complaintsStatusFilter, setComplaintsStatusFilter] = useState<'all' | 'Pending' | 'In Progress' | 'Resolved' | 'Overdue'>('all');
+
+  const handleKpiClick = (type: 'population' | 'wards' | 'complaints' | 'in_progress' | 'resolved' | 'rate') => {
+    let targetId = 'recent-complaints-section';
+    if (type === 'population' || type === 'wards') {
+      targetId = 'wards-heat-map-section';
+    } else if (type === 'rate') {
+      targetId = 'departments-performance-section';
+    } else if (type === 'in_progress') {
+      setComplaintsStatusFilter('In Progress');
+      targetId = 'recent-complaints-section';
+    } else if (type === 'resolved') {
+      setComplaintsStatusFilter('Resolved');
+      targetId = 'recent-complaints-section';
+    } else if (type === 'complaints') {
+      setComplaintsStatusFilter('all');
+      targetId = 'recent-complaints-section';
+    }
+
+    const el = document.getElementById(targetId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.classList.add('ring-4', 'ring-kmc-navy/30', 'transition-all', 'duration-500');
+      setTimeout(() => el.classList.remove('ring-4', 'ring-kmc-navy/30'), 1500);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-kmc-bg">
       <BannerStrip
@@ -97,6 +124,8 @@ export const LeadershipPage: React.FC = () => {
             sublabel="Karimnagar City"
             icon={<Users className="w-5 h-5 text-kmc-navy" />}
             highlightColor="border-l-kmc-navy"
+            onClick={() => handleKpiClick('population')}
+            actionHint="Inspect City Map →"
           />
           <KpiCard
             label="Total Wards"
@@ -104,6 +133,8 @@ export const LeadershipPage: React.FC = () => {
             sublabel="Administrative Divisions"
             icon={<Building2 className="w-5 h-5 text-purple-700" />}
             highlightColor="border-l-purple-600"
+            onClick={() => handleKpiClick('wards')}
+            actionHint="66 Wards Overview →"
           />
           <KpiCard
             label="Total Complaints"
@@ -111,6 +142,9 @@ export const LeadershipPage: React.FC = () => {
             sublabel="Today"
             icon={<Clock className="w-5 h-5 text-blue-600" />}
             highlightColor="border-l-blue-600"
+            onClick={() => handleKpiClick('complaints')}
+            isActive={complaintsStatusFilter === 'all'}
+            actionHint="View All Stream →"
           />
           <KpiCard
             label="In Progress"
@@ -118,6 +152,9 @@ export const LeadershipPage: React.FC = () => {
             sublabel="Field Assignments"
             icon={<Clock className="w-5 h-5 text-amber-700" />}
             highlightColor="border-l-amber-500"
+            onClick={() => handleKpiClick('in_progress')}
+            isActive={complaintsStatusFilter === 'In Progress'}
+            actionHint="Inspect In Progress →"
           />
           <KpiCard
             label="Resolved"
@@ -125,6 +162,9 @@ export const LeadershipPage: React.FC = () => {
             sublabel="Completed with Proof"
             icon={<CheckCircle2 className="w-5 h-5 text-emerald-700" />}
             highlightColor="border-l-emerald-600"
+            onClick={() => handleKpiClick('resolved')}
+            isActive={complaintsStatusFilter === 'Resolved'}
+            actionHint="View Resolved →"
           />
           <KpiCard
             label="Resolution Rate"
@@ -132,12 +172,14 @@ export const LeadershipPage: React.FC = () => {
             sublabel="Target: ≥ 85%"
             icon={<TrendingUp className="w-5 h-5 text-teal-600" />}
             highlightColor="border-l-teal-600"
+            onClick={() => handleKpiClick('rate')}
+            actionHint="Departments Review →"
           />
         </section>
 
         {/* Complaints citizens reopened, then recent complaints with before/after */}
         <ReopenedAlerts onOpen={setViewing} />
-        <RecentComplaints onOpen={setViewing} />
+        <RecentComplaints onOpen={setViewing} statusFilter={complaintsStatusFilter} onStatusFilterChange={setComplaintsStatusFilter} />
 
         {/* Delay Escalation Live Alert */}
         {isDelayEscalated && (
@@ -163,7 +205,7 @@ export const LeadershipPage: React.FC = () => {
         )}
 
         {/* 66-Ward Interactive Heat Map & Active Drilldown */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5">
+        <section id="wards-heat-map-section" className="bg-white rounded-xl shadow-card border border-slate-200 p-5 scroll-mt-20">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-slate-100 gap-2">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-kmc-navy bg-blue-50 px-2 py-0.5 rounded">
@@ -410,7 +452,7 @@ export const LeadershipPage: React.FC = () => {
           </div>
 
           {/* Department Performance (Resolution Rate) */}
-          <div className="bg-white rounded-xl shadow-card border border-slate-200 p-5">
+          <div id="departments-performance-section" className="bg-white rounded-xl shadow-card border border-slate-200 p-5 scroll-mt-20">
             <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
               <h4 className="text-xs font-bold font-heading uppercase text-slate-800">
                 {t("Department Performance (Resolution Rate)")}

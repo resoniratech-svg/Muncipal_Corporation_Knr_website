@@ -94,24 +94,46 @@ export const PerformancePage: React.FC = () => {
 
         {/* 5 Core KPI Metric Cards for Ward 27 (Slide 8 exact) */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-          {WARD_27_KPIS.map((kpi, idx) => (
-            <KpiCard
-              key={idx}
-              label={t(kpi.name)}
-              value={kpi.value}
-              delta={kpi.delta}
-              deltaType={kpi.deltaType}
-              sublabel={`${t("City Avg")}: ${kpi.cityAvgValue}${kpi.unit === '★/5' ? '/5' : kpi.unit === '%' ? '%' : ' d'}`}
-              highlightColor={idx === 0 ? "border-l-blue-600" : idx === 1 ? "border-l-emerald-600" : idx === 2 ? "border-l-amber-500" : idx === 3 ? "border-l-purple-600" : "border-l-teal-600"}
-            />
-          ))}
+          {WARD_27_KPIS.map((kpi, idx) => {
+            const targetIds = [
+              'kpi-trends-section',
+              'kpi-comparison-section',
+              'ward-ranking-section',
+              'kpi-comparison-section',
+              'underperforming-wards-section',
+            ];
+            const targetId = targetIds[idx] || 'kpi-trends-section';
+
+            const handleCardClick = () => {
+              const el = document.getElementById(targetId);
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                el.classList.add('ring-4', 'ring-kmc-navy/30');
+                setTimeout(() => el.classList.remove('ring-4', 'ring-kmc-navy/30'), 1500);
+              }
+            };
+
+            return (
+              <KpiCard
+                key={idx}
+                label={t(kpi.name)}
+                value={kpi.value}
+                delta={kpi.delta}
+                deltaType={kpi.deltaType}
+                sublabel={`${t("City Avg")}: ${kpi.cityAvgValue}${kpi.unit === '★/5' ? '/5' : kpi.unit === '%' ? '%' : ' d'}`}
+                highlightColor={idx === 0 ? "border-l-blue-600" : idx === 1 ? "border-l-emerald-600" : idx === 2 ? "border-l-amber-500" : idx === 3 ? "border-l-purple-600" : "border-l-teal-600"}
+                onClick={handleCardClick}
+                actionHint={t("Inspect Trend →")}
+              />
+            );
+          })}
         </section>
 
         {/* 6-Month Trend Chart & Comparison vs City Average */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Trend Lines (Slide 8) */}
-          <div className="bg-white rounded-xl shadow-card border border-slate-200 p-5 flex flex-col justify-between">
+          <div id="kpi-trends-section" className="scroll-mt-24 bg-white rounded-xl shadow-card border border-slate-200 p-5 flex flex-col justify-between">
             <div>
               <div className="border-b border-slate-100 pb-2 mb-3">
                 <h4 className="text-xs font-bold font-heading uppercase text-slate-800">
@@ -129,7 +151,7 @@ export const PerformancePage: React.FC = () => {
           </div>
 
           {/* KPI Comparison (Ward 27 vs City Average) */}
-          <div className="bg-white rounded-xl shadow-card border border-slate-200 p-5 flex flex-col justify-between">
+          <div id="kpi-comparison-section" className="scroll-mt-24 bg-white rounded-xl shadow-card border border-slate-200 p-5 flex flex-col justify-between">
             <div>
               <div className="border-b border-slate-100 pb-2 mb-3 flex items-center justify-between">
                 <div>
@@ -166,7 +188,7 @@ export const PerformancePage: React.FC = () => {
         </section>
 
         {/* 5.2 Performance Ranking System (Slide 9 Exact) */}
-        <section className="space-y-6">
+        <section id="ward-ranking-section" className="scroll-mt-24 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-200 gap-2">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
@@ -323,7 +345,7 @@ export const PerformancePage: React.FC = () => {
         </section>
 
         {/* Underperforming Wards Table */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5">
+        <section id="underperforming-wards-section" className="scroll-mt-24 bg-white rounded-xl shadow-card border border-slate-200 p-5">
           <div className="border-b border-slate-100 pb-2.5 mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-rose-700" />

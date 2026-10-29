@@ -393,51 +393,124 @@ export const UserManagementPage: React.FC = () => {
 
         {/* User Overview KPI Cards */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl shadow-card border border-slate-200 p-4 flex items-center justify-between border-l-4 border-l-kmc-navy">
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter('all');
+              setRoleFilter('all');
+              setSearchQuery('');
+              const el = document.getElementById('users-table-section');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                el.classList.add('ring-4', 'ring-kmc-navy/30');
+                setTimeout(() => el.classList.remove('ring-4', 'ring-kmc-navy/30'), 1500);
+              }
+            }}
+            className={`bg-white rounded-xl shadow-card border p-4 flex items-center justify-between border-l-4 border-l-kmc-navy text-left transition-all cursor-pointer group hover:-translate-y-1 hover:shadow-lg ${
+              statusFilter === 'all' && roleFilter === 'all' ? 'ring-2 ring-kmc-navy' : 'border-slate-200'
+            }`}
+          >
             <div>
-              <span className="text-[11px] uppercase font-bold text-slate-500">{t('Total Registered Users')}</span>
+              <span className="text-[11px] uppercase font-bold text-slate-500 group-hover:text-kmc-navy transition-colors">{t('Total Registered Users')}</span>
               <p className="text-2xl font-bold font-heading text-slate-900 mt-0.5">{totalUsersCount}</p>
-              <span className="text-[10px] text-slate-400">{t('Across 7 Municipal Roles')}</span>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-kmc-navy flex items-center justify-center">
-              <Users className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-card border border-slate-200 p-4 flex items-center justify-between border-l-4 border-l-emerald-600">
-            <div>
-              <span className="text-[11px] uppercase font-bold text-slate-500">{t('Active Accounts')}</span>
-              <p className="text-2xl font-bold font-heading text-emerald-700 mt-0.5">{activeUsersCount}</p>
-              <span className="text-[10px] text-emerald-600 font-medium">
-                {Math.round((activeUsersCount / (totalUsersCount || 1)) * 100)}% {t('operational')}
+              <span className="text-[10px] text-slate-400 block">{t('Across 7 Municipal Roles')}</span>
+              <span className="text-[10px] text-kmc-navy font-bold mt-1 block opacity-0 group-hover:opacity-100 transition-opacity">
+                {t('View All Users →')}
               </span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-kmc-navy flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Users className="w-5 h-5" />
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter('active');
+              setRoleFilter('all');
+              const el = document.getElementById('users-table-section');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                el.classList.add('ring-4', 'ring-emerald-500/30');
+                setTimeout(() => el.classList.remove('ring-4', 'ring-emerald-500/30'), 1500);
+              }
+            }}
+            className={`bg-white rounded-xl shadow-card border p-4 flex items-center justify-between border-l-4 border-l-emerald-600 text-left transition-all cursor-pointer group hover:-translate-y-1 hover:shadow-lg ${
+              statusFilter === 'active' ? 'ring-2 ring-emerald-600' : 'border-slate-200'
+            }`}
+          >
+            <div>
+              <span className="text-[11px] uppercase font-bold text-slate-500 group-hover:text-emerald-700 transition-colors">{t('Active Accounts')}</span>
+              <p className="text-2xl font-bold font-heading text-emerald-700 mt-0.5">{activeUsersCount}</p>
+              <span className="text-[10px] text-emerald-600 font-medium block">
+                {Math.round((activeUsersCount / (totalUsersCount || 1)) * 100)}% {t('operational')}
+              </span>
+              <span className="text-[10px] text-emerald-700 font-bold mt-1 block opacity-0 group-hover:opacity-100 transition-opacity">
+                {t('Filter Active →')}
+              </span>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center group-hover:scale-110 transition-transform">
               <CheckCircle2 className="w-5 h-5" />
             </div>
-          </div>
+          </button>
 
-          <div className="bg-white rounded-xl shadow-card border border-slate-200 p-4 flex items-center justify-between border-l-4 border-l-rose-500">
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter('deactivated');
+              setRoleFilter('all');
+              const el = document.getElementById('users-table-section');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                el.classList.add('ring-4', 'ring-rose-500/30');
+                setTimeout(() => el.classList.remove('ring-4', 'ring-rose-500/30'), 1500);
+              }
+            }}
+            className={`bg-white rounded-xl shadow-card border p-4 flex items-center justify-between border-l-4 border-l-rose-500 text-left transition-all cursor-pointer group hover:-translate-y-1 hover:shadow-lg ${
+              statusFilter === 'deactivated' ? 'ring-2 ring-rose-500' : 'border-slate-200'
+            }`}
+          >
             <div>
-              <span className="text-[11px] uppercase font-bold text-slate-500">{t('Deactivated Accounts')}</span>
+              <span className="text-[11px] uppercase font-bold text-slate-500 group-hover:text-rose-700 transition-colors">{t('Deactivated Accounts')}</span>
               <p className="text-2xl font-bold font-heading text-rose-700 mt-0.5">{deactivatedUsersCount}</p>
-              <span className="text-[10px] text-slate-400">{t('Access Suspended')}</span>
+              <span className="text-[10px] text-slate-400 block">{t('Access Suspended')}</span>
+              <span className="text-[10px] text-rose-700 font-bold mt-1 block opacity-0 group-hover:opacity-100 transition-opacity">
+                {t('Filter Deactivated →')}
+              </span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform">
               <XCircle className="w-5 h-5" />
             </div>
-          </div>
+          </button>
 
-          <div className="bg-white rounded-xl shadow-card border border-slate-200 p-4 flex items-center justify-between border-l-4 border-l-purple-600">
+          <button
+            type="button"
+            onClick={() => {
+              setRoleFilter('field_staff');
+              setStatusFilter('all');
+              const el = document.getElementById('users-table-section');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                el.classList.add('ring-4', 'ring-purple-500/30');
+                setTimeout(() => el.classList.remove('ring-4', 'ring-purple-500/30'), 1500);
+              }
+            }}
+            className={`bg-white rounded-xl shadow-card border p-4 flex items-center justify-between border-l-4 border-l-purple-600 text-left transition-all cursor-pointer group hover:-translate-y-1 hover:shadow-lg ${
+              roleFilter === 'field_staff' ? 'ring-2 ring-purple-600' : 'border-slate-200'
+            }`}
+          >
             <div>
-              <span className="text-[11px] uppercase font-bold text-slate-500">{t('Field Operations Staff')}</span>
+              <span className="text-[11px] uppercase font-bold text-slate-500 group-hover:text-purple-700 transition-colors">{t('Field Operations Staff')}</span>
               <p className="text-2xl font-bold font-heading text-purple-700 mt-0.5">{roleCounts.field_staff}</p>
-              <span className="text-[10px] text-purple-600 font-medium">{t('Ward Ground Personnel')}</span>
+              <span className="text-[10px] text-purple-600 font-medium block">{t('Ward Ground Personnel')}</span>
+              <span className="text-[10px] text-purple-700 font-bold mt-1 block opacity-0 group-hover:opacity-100 transition-opacity">
+                {t('Filter Field Staff →')}
+              </span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center group-hover:scale-110 transition-transform">
               <HardHat className="w-5 h-5" />
             </div>
-          </div>
+          </button>
         </section>
 
         {/* Role Breakdown Filter Chips */}
@@ -480,7 +553,7 @@ export const UserManagementPage: React.FC = () => {
         </section>
 
         {/* Registered Platform Users Directory & Table */}
-        <section className="bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden">
+        <section id="users-table-section" className="scroll-mt-24 bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden">
           <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50">
             <div>
               <h3 className="text-xs font-bold font-heading uppercase text-slate-800">

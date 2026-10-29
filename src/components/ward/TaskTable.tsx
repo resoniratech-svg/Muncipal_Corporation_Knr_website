@@ -25,7 +25,7 @@ export const TaskTable: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden">
+    <div id="task-assignments-section" className="bg-white rounded-xl shadow-card border border-slate-200 overflow-hidden scroll-mt-20">
       {toastMessage && (
         <div className="p-2.5 bg-emerald-600 text-white text-xs font-semibold flex items-center justify-between">
           <span>{toastMessage}</span>

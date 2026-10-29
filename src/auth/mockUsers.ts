@@ -533,6 +533,26 @@ export const DEMO_USERS: Record<string, DemoUserRecord> = {
     },
   },
 
+  'citizen2@kmc.demo': {
+    passwordHash: 'KmcCitizen2@123',
+    roleDescription: 'Resident citizen (Ward 27 / Green Park Colony) – Smt. Lavanya Reddy',
+    user: {
+      id: 'USR-CITIZEN-02',
+      username: 'citizen2@kmc.demo',
+      displayName: 'Smt. Lavanya Reddy',
+      role: 'citizen',
+      roleTitle: 'Registered Resident Citizen',
+      assignedWardIds: [27],
+      assignedWardName: 'Ward 27 – Green Park Colony',
+      permissions: [
+        'citizen:submit_grievance',
+        'citizen:view_own',
+      ],
+      isActive: true,
+      avatarInitials: 'LR',
+    },
+  },
+
   'auditor@kmc.demo': {
     passwordHash: 'KmcAudit@123',
     roleDescription: 'Governance Auditor & Performance Reviewer (Read-only city audit & SLA review)',

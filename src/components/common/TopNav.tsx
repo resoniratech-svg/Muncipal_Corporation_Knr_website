@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../auth/AuthContext';
@@ -120,7 +120,18 @@ export const TopNav: React.FC = () => {
   const isCitizen = activeRole === 'citizen';
   const isStaff = !!currentUser && !isCitizen;
   const canPickWard = currentUser?.role === 'super_admin' || currentUser?.role === 'mayor_commissioner';
-  const roleBadge = activeRole ? ROLE_DISPLAY_NAMES[activeRole] : null;
+  const roleBadge = useMemo(() => {
+    if (!activeRole) return null;
+    const base = ROLE_DISPLAY_NAMES[activeRole] || { title: activeRole, color: 'text-slate-800', bg: 'bg-slate-100 border-slate-300' };
+    if (currentUser?.role === 'department_officer') {
+      const specificTitle = currentUser.roleTitle || (currentUser.departmentName ? `Department Officer (${currentUser.departmentName.split('/')[0].trim()})` : base.title);
+      return {
+        ...base,
+        title: specificTitle,
+      };
+    }
+    return base;
+  }, [activeRole, currentUser]);
 
   const handleLogout = () => {
     logout();

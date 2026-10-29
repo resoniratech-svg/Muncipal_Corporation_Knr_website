@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BannerStrip } from '../components/common/BannerStrip';
 import { FooterStrip } from '../components/common/FooterStrip';
@@ -10,11 +10,103 @@ import { StatusChip } from '../components/common/StatusChip';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../auth/AuthContext';
 import { GrievanceItem } from '../data/grievances';
-import { Laptop, Smartphone, MapPin, Phone, Building2, Clock, ShieldCheck, User } from 'lucide-react';
+import {
+  Laptop, Smartphone, MapPin, Phone, Building2, Clock, ShieldCheck, User,
+  UserCheck, Banknote, Construction, Trash2, FileText, HeartPulse, ChevronRight, ArrowRight,
+  CheckCircle2, Download, Landmark, FileCheck, Receipt, AlertCircle, ArrowUpRight
+} from 'lucide-react';
 import { usePrefs } from '../i18n';
+import { getPaymentsForCitizen, CitizenPaymentRecord } from '../data/payments';
 import { MobileReportFlow } from '../components/citizen/mobile/MobileReportFlow';
 import { MobileTrackFlow } from '../components/citizen/mobile/MobileTrackFlow';
 import { MobileDetailFlow } from '../components/citizen/mobile/MobileDetailFlow';
+
+const MCK_CITIZEN_DEPARTMENTS = [
+  {
+    id: 'establishment',
+    name: 'Establishment Section',
+    badge: 'Administration & HR',
+    icon: UserCheck,
+    iconBg: 'bg-blue-600',
+    badgeColor: 'bg-blue-50 text-blue-800 border-blue-200',
+    description: 'Manages general administration, human resources, municipal staff postings, and inner corporate affairs.',
+    scope: ['Staff Roster & Deputations', 'Citizen Charters', 'Ward Staff Supervision'],
+    actionLabel: 'Administrative Enquiry',
+    category: 'Establishment',
+  },
+  {
+    id: 'revenue',
+    name: 'Revenue Section',
+    badge: 'Taxation & Assessment',
+    icon: Banknote,
+    iconBg: 'bg-emerald-600',
+    badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    description: 'Responsible for collecting local taxes, including Property Tax (House Tax), Vacant Land Tax (VLT), and municipal revenue evaluations.',
+    scope: ['Property Tax (House Tax)', 'Vacant Land Tax (VLT)', 'Trade Licenses & Mutations'],
+    actionLabel: 'Property Tax / VLT Query',
+    category: 'Property Tax',
+  },
+  {
+    id: 'engineering',
+    name: 'Engineering Section',
+    badge: 'Public Works & Infra',
+    icon: Construction,
+    iconBg: 'bg-amber-600',
+    badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
+    description: 'Oversees public works, city infrastructure development, road layout and repairs, water supply planning, and street lighting networks.',
+    scope: ['Road Restoration & Potholes', 'Underground Drainage', 'Drinking Water Supply', 'Street Lights'],
+    actionLabel: 'Report Works / Drainage',
+    category: 'Drainage',
+  },
+  {
+    id: 'town-planning',
+    name: 'Town Planning Section (TPS)',
+    badge: 'Layouts & Permits',
+    icon: Building2,
+    iconBg: 'bg-purple-600',
+    badgeColor: 'bg-purple-50 text-purple-800 border-purple-200',
+    description: 'Regulates city layouts, manages Building Permissions, acts against unauthorized structures, and processes mutations.',
+    scope: ['TG-bPASS Building Permissions', 'Unauthorized Encroachments', 'Master Plan Layouts', 'Colony Parks'],
+    actionLabel: 'Building Permission / Layout',
+    category: 'Town Planning',
+  },
+  {
+    id: 'sanitation',
+    name: 'Sanitation Section',
+    badge: 'Cleanliness & Waste',
+    icon: Trash2,
+    iconBg: 'bg-green-600',
+    badgeColor: 'bg-green-50 text-green-800 border-green-200',
+    description: 'Directs city cleanliness programs, solid waste management, sewage upkeep, and public health cleaning protocols.',
+    scope: ['Door-to-Door Waste Collection', 'Open Garbage Clearances', 'Anti-Larval Fogging & Bleaching'],
+    actionLabel: 'Report Garbage / Sanitation',
+    category: 'Sanitation',
+  },
+  {
+    id: 'statistics',
+    name: 'Statistics / Birth & Death Registration Section',
+    badge: 'Civil Registry',
+    icon: FileText,
+    iconBg: 'bg-slate-700',
+    badgeColor: 'bg-slate-100 text-slate-800 border-slate-300',
+    description: 'Manages civil registry work including issuing unified certificates for births and deaths within municipal limits.',
+    scope: ['Digital Birth Certificates', 'Death Registration Certificates', 'Name Corrections & QR Verification'],
+    actionLabel: 'Certificate Services',
+    category: 'Certificates',
+  },
+  {
+    id: 'urban-welfare',
+    name: 'Urban Welfare / Poverty Alleviation Section (MEPMA & Asara)',
+    badge: 'Welfare & MEPMA',
+    icon: HeartPulse,
+    iconBg: 'bg-pink-600',
+    badgeColor: 'bg-pink-50 text-pink-800 border-pink-200',
+    description: 'Works alongside state initiatives like the Mission for Elimination of Poverty in Municipal Areas (MEPMA) and distributes welfare programs like the Asara pension.',
+    scope: ['Asara Social Security Pensions', 'MEPMA Mahila SHG Subsidies', 'PM SVANidhi Street Vendor Cards'],
+    actionLabel: 'Asara / MEPMA Services',
+    category: 'Urban Welfare',
+  },
+];
 
 export const CitizenPage: React.FC = () => {
   const navigate = useNavigate();
@@ -40,6 +132,38 @@ export const CitizenPage: React.FC = () => {
     if (!currentUser || currentUser.role !== 'citizen') return true;
     return g.citizenId === currentUser.id;
   });
+
+  // Citizen's paid municipal taxes & utility bills (Property Tax, Water Charges, etc.)
+  const citizenPayments = useMemo(() => {
+    return getPaymentsForCitizen(currentUser?.id, citizenDisplayName);
+  }, [currentUser, citizenDisplayName]);
+
+  // Citizen's submitted applications & certificates (e.g. Birth Certificate, Building Permission, Asara Pension)
+  const citizenApplications = useMemo(() => {
+    return grievances.filter(g => {
+      const isLavanya = (
+        (g.citizenName && g.citizenName.toLowerCase().includes('lavanya')) ||
+        (g.description && g.description.toLowerCase().includes('lavanya')) ||
+        (currentUser?.displayName && currentUser.displayName.toLowerCase().includes('lavanya') && g.wardId === 27) ||
+        g.citizenId === currentUser?.id
+      );
+      const isServiceApp = (
+        g.id.startsWith('APP-') ||
+        g.category.toLowerCase().includes('birth') ||
+        g.category.toLowerCase().includes('death') ||
+        g.category.toLowerCase().includes('permission') ||
+        g.category.toLowerCase().includes('pension') ||
+        g.category.toLowerCase().includes('shg') ||
+        g.category.toLowerCase().includes('vendor') ||
+        g.category.toLowerCase().includes('certificate') ||
+        g.description.toLowerCase().includes('application')
+      );
+      if (currentUser?.role === 'citizen') {
+        return (g.citizenId === currentUser.id || isLavanya) && isServiceApp;
+      }
+      return isServiceApp;
+    });
+  }, [grievances, currentUser]);
 
   const developmentBreakdown = [
     { name: t("Completed"), value: 65, color: "#2E7D32" },
@@ -322,25 +446,551 @@ export const CitizenPage: React.FC = () => {
                 {t("Together, Let's Build a Cleaner, Smarter Karimnagar.")}
               </h3>
               <p className="text-sm text-slate-300 mt-1">{t("Report issues. Track progress. See the change.")}</p>
-              <div className="flex flex-wrap gap-3 mt-4">
-                <a href="#/citizen/report" onClick={(e) => { e.preventDefault(); navigate('/citizen/report'); }} className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase rounded-lg shadow">
-                  {t("Report an Issue")}
-                </a>
-                <a href="#/citizen/track" onClick={(e) => { e.preventDefault(); navigate('/citizen/track'); }} className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs uppercase rounded-lg">
+              <div className="flex flex-wrap gap-2.5 mt-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/citizen/report?mode=payment')}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase rounded-lg shadow flex items-center gap-1.5 transition-all"
+                >
+                  <Banknote className="w-3.5 h-3.5" />
+                  <span>{t("Pay Taxes & Bills")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/citizen/report?mode=certificate')}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs uppercase rounded-lg shadow flex items-center gap-1.5 transition-all"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{t("Certificates & Schemes")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/citizen/report?mode=grievance')}
+                  className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase rounded-lg shadow flex items-center gap-1.5 transition-all"
+                >
+                  <Construction className="w-3.5 h-3.5" />
+                  <span>{t("Report a Problem")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/citizen/track')}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs uppercase rounded-lg transition-all"
+                >
                   {t("Track My Request")}
-                </a>
+                </button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                 {(dataMode === 'deck-exact'
-                  ? [[t('Total Grievances'), '8,924'], [t('In Progress'), '2,341'], [t('Completed'), '6,123'], [t('Overdue'), '460']]
-                  : [[t('Total Grievances'), '12,458'], [t('In Progress'), '1,874'], [t('Completed'), '10,234'], [t('Overdue'), '350']]
-                ).map(([label, value]) => (
-                  <div key={label} className="p-3 rounded-xl bg-white/10 border border-white/15">
-                    <span className="text-[11px] uppercase font-bold text-slate-300 block">{label}</span>
-                    <span className="text-xl font-bold font-heading">{value}</span>
-                  </div>
+                  ? [[t('Total Grievances'), '8,924', 'total'], [t('In Progress'), '2,341', 'in_progress'], [t('Completed'), '6,123', 'completed'], [t('Overdue'), '460', 'overdue']]
+                  : [[t('Total Grievances'), '12,458', 'total'], [t('In Progress'), '1,874', 'in_progress'], [t('Completed'), '10,234', 'completed'], [t('Overdue'), '350', 'overdue']]
+                ).map(([label, value, key]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => {
+                      const targetId = key === 'completed' ? 'citizen-payments-section' : 'citizen-applications-section';
+                      const el = document.getElementById(targetId);
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        el.classList.add('ring-4', 'ring-amber-400/40');
+                        setTimeout(() => el.classList.remove('ring-4', 'ring-amber-400/40'), 1500);
+                      }
+                    }}
+                    className="p-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-left transition-all cursor-pointer group"
+                    title={t("View {{label}} breakdown", { label })}
+                  >
+                    <span className="text-[11px] uppercase font-bold text-slate-300 block group-hover:text-amber-300 transition-colors">{label}</span>
+                    <span className="text-xl font-bold font-heading text-white">{value}</span>
+                    <span className="text-[10px] text-amber-200/80 block mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {key === 'completed' ? t("View Receipts →") : t("Inspect Status →")}
+                    </span>
+                  </button>
                 ))}
               </div>
+            </section>
+
+            {/* ================================================================= */}
+            {/* 1. My Municipal Tax & Utility Bill Payments (Official Receipts)   */}
+            {/* ================================================================= */}
+            <section id="citizen-payments-section" className="scroll-mt-24 bg-white rounded-xl shadow-card border border-slate-200 p-5 sm:p-6 space-y-4 border-l-4 border-l-emerald-600">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                    <Receipt className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-bold font-heading uppercase text-slate-900">
+                        {t("My Municipal Tax & Utility Bill Payments")}
+                      </h3>
+                      <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                        <span>{t("Settled & Reconciled")}</span>
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      {t("Official paid receipts reconciled in the Municipal Corporation of Karimnagar Treasury for Ward {{ward}} (PTIN-KNR-27-0428)", { ward: citizenWard.id })}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/citizen/report?mode=payment')}
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition-all self-start sm:self-auto shrink-0"
+                >
+                  <Banknote className="w-3.5 h-3.5" />
+                  <span>{t("Pay Another Bill / Tax")}</span>
+                </button>
+              </div>
+
+              {citizenPayments.length === 0 ? (
+                <div className="p-6 text-center bg-slate-50 rounded-xl text-slate-500 text-xs">
+                  {t("No payment history found. Settle your property tax or water bills online.")}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200">
+                      <tr>
+                        <th className="py-2.5 px-3">{t("Receipt No")}</th>
+                        <th className="py-2.5 px-3">{t("Tax / Utility Head")}</th>
+                        <th className="py-2.5 px-3">{t("Assessment / Ref")}</th>
+                        <th className="py-2.5 px-3">{t("Door / Location")}</th>
+                        <th className="py-2.5 px-3">{t("Amount Paid")}</th>
+                        <th className="py-2.5 px-3">{t("Credited Treasury Account")}</th>
+                        <th className="py-2.5 px-3">{t("Paid Date")}</th>
+                        <th className="py-2.5 px-3 text-right">{t("Receipt")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {citizenPayments.map((p) => (
+                        <tr key={p.receiptNo} className="hover:bg-emerald-50/40 transition-colors">
+                          <td className="py-3 px-3 font-mono font-bold text-emerald-800 whitespace-nowrap">
+                            {p.receiptNo}
+                          </td>
+                          <td className="py-3 px-3 font-bold text-slate-900">
+                            {t(p.taxType)}
+                            <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
+                              {p.paymentMethod}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 font-mono text-slate-700 whitespace-nowrap">
+                            {p.refValue}
+                          </td>
+                          <td className="py-3 px-3 text-slate-700 whitespace-nowrap">
+                            {p.doorNo}, Ward {p.wardId}
+                          </td>
+                          <td className="py-3 px-3 font-mono font-extrabold text-slate-900 whitespace-nowrap">
+                            ₹{p.amount.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="font-mono text-[11px] text-slate-800 font-bold block">{p.receivingAccount}</span>
+                            <span className="text-[10px] text-slate-500 block truncate max-w-[180px]">{p.officerInCharge} ({p.department})</span>
+                          </td>
+                          <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
+                            {p.paidTimeStr}
+                          </td>
+                          <td className="py-3 px-3 text-right whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                alert(`Receipt ${p.receiptNo} for ₹${p.amount} (${p.taxType}) is downloaded.\nCredited to: ${p.receivingAccountName}\nSupervising Officer: ${p.officerInCharge}`);
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg border border-slate-300 hover:border-emerald-600 bg-white text-slate-700 hover:text-emerald-800 font-bold text-[11px] inline-flex items-center gap-1 shadow-xs transition"
+                            >
+                              <Download className="w-3 h-3 text-emerald-700" />
+                              <span>{t("Receipt PDF")}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+
+            {/* ================================================================= */}
+            {/* 2. My Applied Certificates, Permissions & Welfare Services        */}
+            {/* ================================================================= */}
+            <section id="citizen-applications-section" className="scroll-mt-24 bg-white rounded-xl shadow-card border border-slate-200 p-5 sm:p-6 space-y-4 border-l-4 border-l-blue-600">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
+                    <FileCheck className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-bold font-heading uppercase text-slate-900">
+                        {t("My Applied Certificates & Welfare Services")}
+                      </h3>
+                      <span className="text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300 px-2 py-0.5 rounded-full">
+                        {citizenApplications.length} {t("Active Applications")}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      {t("Live status of your birth/death certificates, TG-bPASS permissions, and Asara welfare applications.")}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/citizen/report?mode=certificate')}
+                  className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition-all self-start sm:self-auto shrink-0"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{t("Apply for New Certificate")}</span>
+                </button>
+              </div>
+
+              {citizenApplications.length === 0 ? (
+                <div className="p-6 text-center bg-slate-50 rounded-xl text-slate-500 text-xs">
+                  {t("No applications lodged yet. Request digital certificates or welfare schemes directly.")}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200">
+                      <tr>
+                        <th className="py-2.5 px-3">{t("Application ID")}</th>
+                        <th className="py-2.5 px-3">{t("Service Scheme")}</th>
+                        <th className="py-2.5 px-3">{t("Designated Section")}</th>
+                        <th className="py-2.5 px-3">{t("Receiving Officer")}</th>
+                        <th className="py-2.5 px-3">{t("Application Date")}</th>
+                        <th className="py-2.5 px-3">{t("SLA Target")}</th>
+                        <th className="py-2.5 px-3">{t("Status")}</th>
+                        <th className="py-2.5 px-3 text-right">{t("Action")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {citizenApplications.map((app) => (
+                        <tr key={app.id} className="hover:bg-blue-50/40 transition-colors">
+                          <td className="py-3 px-3 font-mono font-bold text-kmc-navy whitespace-nowrap">
+                            {app.id}
+                          </td>
+                          <td className="py-3 px-3 font-bold text-slate-900 max-w-xs">
+                            {t(app.category)}
+                            <span className="block text-[10px] text-slate-500 font-normal mt-0.5 truncate">
+                              {app.description}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="text-slate-800 font-semibold block">{app.department}</span>
+                            <span className="text-[10px] text-slate-500 block">Ward {app.wardId}</span>
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap font-medium text-slate-800">
+                            {app.assignedTo || t("Section In-Charge")}
+                          </td>
+                          <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
+                            {app.reportedOn}
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-slate-100 text-slate-700">
+                              {app.slaHours}h SLA
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <StatusChip status={app.status} />
+                          </td>
+                          <td className="py-3 px-3 text-right whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/citizen/track/${encodeURIComponent(app.id)}`)}
+                              className="px-2.5 py-1.5 rounded-lg bg-kmc-navy text-white hover:bg-kmc-navy-light font-bold text-[11px] inline-flex items-center gap-1 shadow-xs transition"
+                            >
+                              <span>{t("Track Live")}</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+
+            {/* The 7 Core Departments of MCK — Public Services & Civic Facilities */}
+            <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 sm:p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                  <span className="text-[11px] uppercase font-bold text-kmc-navy bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded">
+                    {t("Municipal Corporation of Karimnagar (MCK) Governance")}
+                  </span>
+                  <h3 className="text-base sm:text-lg font-bold font-heading uppercase text-slate-900 mt-1">
+                    {t("The 7 Core Departments of MCK — Public Services & Grievance Lodging")}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {t("The 7 administrative sections administering local governance, tax collection, public works, and civic welfare in Karimnagar.")}
+                  </p>
+                </div>
+                <span className="text-xs font-bold font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg shrink-0 self-start sm:self-auto">
+                  {t("7 Official Sections Active")}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {MCK_CITIZEN_DEPARTMENTS.map((dept) => {
+                  const Icon = dept.icon;
+                  return (
+                    <div
+                      key={dept.id}
+                      className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 hover:border-kmc-navy hover:shadow-md transition-all flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-2.5">
+                          <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-xs ${dept.iconBg}`}>
+                            <Icon className="w-5 h-5" />
+                          </span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${dept.badgeColor}`}>
+                            {t(dept.badge)}
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 font-heading leading-tight mb-1">
+                          {t(dept.name)}
+                        </h4>
+                        <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
+                          {t(dept.description)}
+                        </p>
+                        <div className="bg-white rounded-lg p-2.5 border border-slate-200/80 mb-3 space-y-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                            {t("Citizen Facilities & Scope")}
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {dept.scope.map((s, idx) => (
+                              <span key={idx} className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">
+                                {t(s)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (dept.id === 'revenue') {
+                            navigate('/citizen/report?mode=payment');
+                          } else if (dept.id === 'statistics' || dept.id === 'urban-welfare' || dept.id === 'town-planning') {
+                            navigate('/citizen/report?mode=certificate');
+                          } else {
+                            navigate('/citizen/report?mode=grievance');
+                          }
+                        }}
+                        className="w-full py-2 px-3 rounded-lg bg-kmc-navy hover:bg-kmc-navy-light text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                      >
+                        <span>{t(dept.actionLabel)}</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* ================================================================= */}
+            {/* 1. My Municipal Tax & Utility Bill Payments (Official Receipts)   */}
+            {/* ================================================================= */}
+            <section className="bg-white rounded-xl shadow-card border border-slate-200 p-5 sm:p-6 space-y-4 border-l-4 border-l-emerald-600">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                    <Receipt className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-bold font-heading uppercase text-slate-900">
+                        {t("My Municipal Tax & Utility Bill Payments")}
+                      </h3>
+                      <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                        <span>{t("Settled & Reconciled")}</span>
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      {t("Official paid receipts reconciled in the Municipal Corporation of Karimnagar Treasury for Ward {{ward}} (PTIN-KNR-27-0428)", { ward: citizenWard.id })}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/citizen/report?mode=payment')}
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition-all self-start sm:self-auto shrink-0"
+                >
+                  <Banknote className="w-3.5 h-3.5" />
+                  <span>{t("Pay Another Bill / Tax")}</span>
+                </button>
+              </div>
+
+              {citizenPayments.length === 0 ? (
+                <div className="p-6 text-center bg-slate-50 rounded-xl text-slate-500 text-xs">
+                  {t("No payment history found. Settle your property tax or water bills online.")}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200">
+                      <tr>
+                        <th className="py-2.5 px-3">{t("Receipt No")}</th>
+                        <th className="py-2.5 px-3">{t("Tax / Utility Head")}</th>
+                        <th className="py-2.5 px-3">{t("Assessment / Ref")}</th>
+                        <th className="py-2.5 px-3">{t("Door / Location")}</th>
+                        <th className="py-2.5 px-3">{t("Amount Paid")}</th>
+                        <th className="py-2.5 px-3">{t("Credited Treasury Account")}</th>
+                        <th className="py-2.5 px-3">{t("Paid Date")}</th>
+                        <th className="py-2.5 px-3 text-right">{t("Receipt")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {citizenPayments.map((p) => (
+                        <tr key={p.receiptNo} className="hover:bg-emerald-50/40 transition-colors">
+                          <td className="py-3 px-3 font-mono font-bold text-emerald-800 whitespace-nowrap">
+                            {p.receiptNo}
+                          </td>
+                          <td className="py-3 px-3 font-bold text-slate-900">
+                            {t(p.taxType)}
+                            <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
+                              {p.paymentMethod}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 font-mono text-slate-700 whitespace-nowrap">
+                            {p.refValue}
+                          </td>
+                          <td className="py-3 px-3 text-slate-700 whitespace-nowrap">
+                            {p.doorNo}, Ward {p.wardId}
+                          </td>
+                          <td className="py-3 px-3 font-mono font-extrabold text-slate-900 whitespace-nowrap">
+                            ₹{p.amount.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="font-mono text-[11px] text-slate-800 font-bold block">{p.receivingAccount}</span>
+                            <span className="text-[10px] text-slate-500 block truncate max-w-[180px]">{p.officerInCharge} ({p.department})</span>
+                          </td>
+                          <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
+                            {p.paidTimeStr}
+                          </td>
+                          <td className="py-3 px-3 text-right whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                alert(`Receipt ${p.receiptNo} for ₹${p.amount} (${p.taxType}) is downloaded.\nCredited to: ${p.receivingAccountName}\nSupervising Officer: ${p.officerInCharge}`);
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg border border-slate-300 hover:border-emerald-600 bg-white text-slate-700 hover:text-emerald-800 font-bold text-[11px] inline-flex items-center gap-1 shadow-xs transition"
+                            >
+                              <Download className="w-3 h-3 text-emerald-700" />
+                              <span>{t("Receipt PDF")}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+
+            {/* ================================================================= */}
+            {/* 2. My Applied Certificates, Permissions & Welfare Services        */}
+            {/* ================================================================= */}
+            <section id="citizen-applications-section" className="scroll-mt-24 bg-white rounded-xl shadow-card border border-slate-200 p-5 sm:p-6 space-y-4 border-l-4 border-l-blue-600">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
+                    <FileCheck className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-bold font-heading uppercase text-slate-900">
+                        {t("My Applied Certificates & Welfare Services")}
+                      </h3>
+                      <span className="text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300 px-2 py-0.5 rounded-full">
+                        {citizenApplications.length} {t("Active Applications")}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      {t("Live status of your birth/death certificates, TG-bPASS permissions, and Asara welfare applications.")}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/citizen/report?mode=certificate')}
+                  className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition-all self-start sm:self-auto shrink-0"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{t("Apply for New Certificate")}</span>
+                </button>
+              </div>
+
+              {citizenApplications.length === 0 ? (
+                <div className="p-6 text-center bg-slate-50 rounded-xl text-slate-500 text-xs">
+                  {t("No applications lodged yet. Request digital certificates or welfare schemes directly.")}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200">
+                      <tr>
+                        <th className="py-2.5 px-3">{t("Application ID")}</th>
+                        <th className="py-2.5 px-3">{t("Service Scheme")}</th>
+                        <th className="py-2.5 px-3">{t("Designated Section")}</th>
+                        <th className="py-2.5 px-3">{t("Receiving Officer")}</th>
+                        <th className="py-2.5 px-3">{t("Application Date")}</th>
+                        <th className="py-2.5 px-3">{t("SLA Target")}</th>
+                        <th className="py-2.5 px-3">{t("Status")}</th>
+                        <th className="py-2.5 px-3 text-right">{t("Action")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {citizenApplications.map((app) => (
+                        <tr key={app.id} className="hover:bg-blue-50/40 transition-colors">
+                          <td className="py-3 px-3 font-mono font-bold text-kmc-navy whitespace-nowrap">
+                            {app.id}
+                          </td>
+                          <td className="py-3 px-3 font-bold text-slate-900 max-w-xs">
+                            {t(app.category)}
+                            <span className="block text-[10px] text-slate-500 font-normal mt-0.5 truncate">
+                              {app.description}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="text-slate-800 font-semibold block">{app.department}</span>
+                            <span className="text-[10px] text-slate-500 block">Ward {app.wardId}</span>
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap font-medium text-slate-800">
+                            {app.assignedTo || t("Section In-Charge")}
+                          </td>
+                          <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
+                            {app.reportedOn}
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-slate-100 text-slate-700">
+                              {app.slaHours}h SLA
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <StatusChip status={app.status} />
+                          </td>
+                          <td className="py-3 px-3 text-right whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/citizen/track/${encodeURIComponent(app.id)}`)}
+                              className="px-2.5 py-1.5 rounded-lg bg-kmc-navy text-white hover:bg-kmc-navy-light font-bold text-[11px] inline-flex items-center gap-1 shadow-xs transition"
+                            >
+                              <span>{t("Track Live")}</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </section>
 
             {/* Top Row: Ward Development Projects Transparency */}
