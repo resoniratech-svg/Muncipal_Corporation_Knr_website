@@ -304,11 +304,10 @@ export const DepartmentDashboardPage: React.FC = () => {
   // Automatically sync section and default category when initialSection / current officer changes
   useEffect(() => {
     if (initialSection) {
-      setSelectedSection(initialSection);
-      try {
-        sessionStorage.setItem(`kmc_dept_selected_section_${currentUser?.id || 'default'}`, initialSection);
-      } catch {}
-      const defaultCats = SECTION_DEFAULT_CATEGORIES[initialSection] || SECTION_DEFAULT_CATEGORIES['Engineering Section'];
+      const saved = sessionStorage.getItem(`kmc_dept_selected_section_${currentUser?.id || 'default'}`);
+      const effectiveSec = saved || initialSection;
+      setSelectedSection(effectiveSec);
+      const defaultCats = SECTION_DEFAULT_CATEGORIES[effectiveSec] || SECTION_DEFAULT_CATEGORIES['Engineering Section'];
       if (defaultCats && defaultCats.length > 0) {
         setActiveCategoryKey(defaultCats[0].key);
       }
@@ -318,10 +317,10 @@ export const DepartmentDashboardPage: React.FC = () => {
   const sectionOptions = useMemo(() => {
     return MCK_SECTIONS.map((sec) => ({
       value: sec.name,
-      label: sec.name,
-      sublabel: sec.description,
+      label: t(sec.name),
+      sublabel: t(sec.description),
     }));
-  }, []);
+  }, [t]);
 
   // 1. Ward Selection State: default to Ward 27 or session
   const [selectedWard, setSelectedWard] = useState<string>(() => {
@@ -349,16 +348,6 @@ export const DepartmentDashboardPage: React.FC = () => {
       return 'drainage';
     }
   });
-
-  // Whenever selectedSection changes, ensure activeCategoryKey is valid for this section
-  useEffect(() => {
-    const defaultCats = SECTION_DEFAULT_CATEGORIES[selectedSection] || SECTION_DEFAULT_CATEGORIES['Engineering Section'];
-    if (defaultCats && defaultCats.length > 0) {
-      if (!defaultCats.some((c) => c.key === activeCategoryKey)) {
-        setActiveCategoryKey(defaultCats[0].key);
-      }
-    }
-  }, [selectedSection, activeCategoryKey]);
 
   // 3. Status Filter State (per hand-drawn layout; completed unified under resolved)
   const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'In Progress' | 'Resolved' | 'Overdue'>('all');
@@ -491,8 +480,12 @@ export const DepartmentDashboardPage: React.FC = () => {
       const pendingInWard = deptGrievancesAll.filter((g) => g.wardId === w.id && g.status === 'Pending').length;
       return {
         value: String(w.id),
-        label: `Ward ${w.id} — ${w.name}`,
-        sublabel: `Corporator: ${w.corporator} • ${count} grievance(s) (${pendingInWard} pending)`,
+        label: t('Ward {{id}} — {{name}}', { id: w.id, name: t(w.name) }),
+        sublabel: t('Corporator: {{name}} • {{count}} grievance(s) ({{pending}} pending)', {
+          name: t(w.corporator),
+          count,
+          pending: pendingInWard,
+        }),
       };
     });
 
@@ -548,20 +541,27 @@ export const DepartmentDashboardPage: React.FC = () => {
     return [...base, ...extras];
   }, [wardFilteredGrievances, selectedSection]);
 
-  // Keep active category synced whenever availableCategories or selectedSection changes
-  useEffect(() => {
-    if (!availableCategories.some((c) => c.key === activeCategoryKey)) {
-      if (availableCategories.length > 0) {
-        setActiveCategoryKey(availableCategories[0].key);
-      }
+  // Guaranteed active category key: seamlessly aligns with availableCategories and selectedSection
+  const effectiveCategoryKey = useMemo(() => {
+    if (availableCategories.some((c) => c.key === activeCategoryKey)) {
+      return activeCategoryKey;
     }
-  }, [availableCategories, activeCategoryKey]);
+    const defaultCats = SECTION_DEFAULT_CATEGORIES[selectedSection] || SECTION_DEFAULT_CATEGORIES['Engineering Section'];
+    return defaultCats[0]?.key || availableCategories[0]?.key || 'drainage';
+  }, [availableCategories, activeCategoryKey, selectedSection]);
+
+  // Keep state synced whenever effective category key shifts
+  useEffect(() => {
+    if (activeCategoryKey !== effectiveCategoryKey) {
+      setActiveCategoryKey(effectiveCategoryKey);
+    }
+  }, [effectiveCategoryKey, activeCategoryKey]);
 
   // Active category metadata
   const activeCategoryMeta = useMemo(() => {
-    return CATEGORY_DEFINITIONS[activeCategoryKey] || {
-      key: activeCategoryKey,
-      name: activeCategoryKey.toUpperCase(),
+    return CATEGORY_DEFINITIONS[effectiveCategoryKey] || {
+      key: effectiveCategoryKey,
+      name: effectiveCategoryKey.toUpperCase(),
       department: selectedSection,
       icon: Wrench,
       color: 'text-slate-700',
@@ -570,12 +570,12 @@ export const DepartmentDashboardPage: React.FC = () => {
       badgeText: 'text-slate-900',
       defaultSla: 72,
     };
-  }, [activeCategoryKey, selectedSection]);
+  }, [effectiveCategoryKey, selectedSection]);
 
   // Grievances filtered strictly by: (Selected Ward) AND (Selected Category Tab) AND (Selected Status) AND (Search)
   const filteredCategoryGrievances = useMemo(() => {
     return wardFilteredGrievances
-      .filter(g => resolveCategoryKey(g) === activeCategoryKey)
+      .filter(g => resolveCategoryKey(g) === effectiveCategoryKey)
       .filter(g => {
         // Status filter
         if (statusFilter !== 'all') {
@@ -607,7 +607,7 @@ export const DepartmentDashboardPage: React.FC = () => {
         }
         return b.id.localeCompare(a.id);
       });
-  }, [wardFilteredGrievances, activeCategoryKey, statusFilter, searchQuery, sortBy]);
+  }, [wardFilteredGrievances, effectiveCategoryKey, statusFilter, searchQuery, sortBy]);
 
   // Modal Handlers
   const handleOpenAssignModal = (gid: string) => {
@@ -677,7 +677,7 @@ export const DepartmentDashboardPage: React.FC = () => {
       {/* A. Existing Application Header */}
       <BannerStrip
         title={`${t('Department Officer Portal')} • ${selectedSection.toUpperCase()}`}
-        tagline="Ward-Specific Grievance Redressal, Category Grouping & Ground Staff Dispatch"
+        tagline={t("Ward-Specific Grievance Redressal, Category Grouping & Ground Staff Dispatch")}
         actionButton={
           <span className="text-xs bg-orange-700 text-white font-bold px-3 py-1 rounded-md shadow uppercase tracking-wide">
             {t('72h SLA Active')}
@@ -852,7 +852,7 @@ export const DepartmentDashboardPage: React.FC = () => {
                         </td>
                         <td className="py-2 px-3 whitespace-nowrap">
                           <strong className="text-slate-900">{p.citizenName}</strong>
-                          <span className="text-slate-500 block text-[10px]">Door {p.doorNo}, Ward {p.wardId}</span>
+                          <span className="text-slate-500 block text-[10px]">{t("Door {{door}}, Ward {{ward}}", { door: p.doorNo, ward: p.wardId })}</span>
                         </td>
                         <td className="py-2 px-3 font-mono text-slate-700 whitespace-nowrap">
                           {p.refValue}
@@ -894,7 +894,7 @@ export const DepartmentDashboardPage: React.FC = () => {
 
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
             {availableCategories.map((cat) => {
-              const isActive = activeCategoryKey === cat.key;
+              const isActive = effectiveCategoryKey === cat.key;
               const count = categoryCounts[cat.key] || 0;
               const Icon = cat.icon;
 
@@ -1024,7 +1024,7 @@ export const DepartmentDashboardPage: React.FC = () => {
                 {t(activeCategoryMeta.name)}
               </span>
               <span className="text-[11px] text-slate-500">
-                • {selectedWard === 'all' ? t('All Wards') : `Ward ${selectedWard}`} • SLA: {activeCategoryMeta.defaultSla}h
+                • {selectedWard === 'all' ? t('All Wards') : t('Ward {{ward}}', { ward: selectedWard })} • {t('SLA: {{sla}}h', { sla: activeCategoryMeta.defaultSla })}
               </span>
             </div>
             <span className="text-xs font-mono font-bold text-slate-600">
@@ -1256,11 +1256,15 @@ export const DepartmentDashboardPage: React.FC = () => {
 
             {(() => {
               const {
-                eligibleStaff: eligibleWardStaff,
+                eligibleStaff: rawEligibleStaff,
                 grievance: targetG,
                 requiredCategory,
                 targetWardId,
               } = staffCategoryRepository.getEligibleFieldStaff(selectedGrievanceId || '', currentUser?.id);
+              
+              const allWardFieldStaff = userRepository.getFieldStaff({ wardId: targetWardId, activeOnly: true });
+              const eligibleWardStaff = rawEligibleStaff.length > 0 ? rawEligibleStaff : allWardFieldStaff;
+              const isFallbackStaff = rawEligibleStaff.length === 0 && allWardFieldStaff.length > 0;
               
               const hasStaff = eligibleWardStaff.length > 0;
               const effectiveAssignee = assigneeName || (hasStaff ? eligibleWardStaff[0].displayName : '');
@@ -1271,7 +1275,7 @@ export const DepartmentDashboardPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold font-mono text-kmc-navy">{selectedGrievanceId}</span>
                       <span className="text-xs font-bold bg-slate-200 px-2 py-0.5 rounded text-slate-800">
-                        Ward {targetWardId}
+                        {t('Ward {{ward}}', { ward: targetWardId })}
                       </span>
                     </div>
                     <p className="text-xs font-semibold text-slate-800">
@@ -1279,14 +1283,14 @@ export const DepartmentDashboardPage: React.FC = () => {
                     </p>
                     <p className="text-[11px] text-slate-500 flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
-                      <span>{targetG?.location}</span>
+                      <span>{targetG ? t(targetG.location) : ''}</span>
                     </p>
 
                     {requiredCategory && (
                       <div className="flex items-center gap-2 pt-1 border-t border-slate-200 mt-2">
                         <span className="text-[11px] font-bold text-slate-600 uppercase">{t('Required Staff Category')}:</span>
                         <span className="text-[11px] font-bold bg-blue-100 text-blue-900 px-2 py-0.5 rounded">
-                          {requiredCategory.name}
+                          {t(requiredCategory.name)}
                         </span>
                       </div>
                     )}
@@ -1296,7 +1300,7 @@ export const DepartmentDashboardPage: React.FC = () => {
                     <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 text-xs space-y-1">
                       <p className="font-bold flex items-center gap-1.5 text-amber-900">
                         <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
-                        <span>{t('No active {{cat}} is assigned to Ward {{ward}}.', { cat: requiredCategory?.name || 'Field Staff', ward: targetWardId })}</span>
+                        <span>{t('No active {{cat}} is assigned to Ward {{ward}}.', { cat: t(requiredCategory?.name || 'Field Staff'), ward: targetWardId })}</span>
                       </p>
                       <p className="text-amber-800 leading-relaxed text-[11px]">
                         {t('This grievance will remain in the Awaiting Assignment queue. Cross-ward staff assignments are strictly prohibited by KMC governance rules to ensure ward-level accountability.')}
@@ -1306,11 +1310,16 @@ export const DepartmentDashboardPage: React.FC = () => {
                     <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs flex items-center gap-2">
                       <UserCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span>
-                        {t('{{count}} eligible {{cat}} worker(s) assigned to Ward {{ward}} ready for deployment.', {
-                          count: eligibleWardStaff.length,
-                          cat: requiredCategory?.name || 'Field Staff',
-                          ward: targetWardId,
-                        })}
+                        {isFallbackStaff
+                          ? t('{{count}} active Ward {{ward}} field worker(s) available for assignment.', {
+                              count: eligibleWardStaff.length,
+                              ward: targetWardId,
+                            })
+                          : t('{{count}} eligible {{cat}} worker(s) assigned to Ward {{ward}} ready for deployment.', {
+                              count: eligibleWardStaff.length,
+                              cat: t(requiredCategory?.name || 'Field Staff'),
+                              ward: targetWardId,
+                            })}
                       </span>
                     </div>
                   )}
@@ -1324,13 +1333,13 @@ export const DepartmentDashboardPage: React.FC = () => {
                         <SearchableSelect
                           value={effectiveAssignee}
                           onChange={(val) => setAssigneeName(val)}
-                          searchPlaceholder={t('Search {{cat}} in Ward {{ward}}...', { cat: requiredCategory?.name || 'Field Staff', ward: targetWardId })}
+                          searchPlaceholder={t('Search {{cat}} in Ward {{ward}}...', { cat: t(requiredCategory?.name || 'Field Staff'), ward: targetWardId })}
                           options={eligibleWardStaff.map((s) => {
                             const workload = tasks.filter((t) => (t.assignedFieldStaffId === s.id || t.assignedTo === s.displayName) && t.status !== 'Completed').length;
                             return {
                               value: s.displayName,
-                              label: s.displayName,
-                              sublabel: `ID: ${s.id} • Ward ${s.wardId} • ${s.staffCategory || s.roleTitle} • ${workload} active task(s)`,
+                              label: t(s.displayName),
+                              sublabel: `ID: ${s.id} • ${t('Ward {{ward}}', { ward: s.wardId })} • ${t(s.staffCategory || s.roleTitle)} • ${workload} ${t('records')}`,
                             };
                           })}
                           fullWidth
@@ -1340,7 +1349,7 @@ export const DepartmentDashboardPage: React.FC = () => {
                         <input
                           type="text"
                           disabled
-                          value={t('No active {{cat}} assigned to Ward {{ward}}', { cat: requiredCategory?.name || 'staff', ward: targetWardId })}
+                          value={t('No active {{cat}} assigned to Ward {{ward}}', { cat: t(requiredCategory?.name || 'staff'), ward: targetWardId })}
                           className="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-500 text-xs cursor-not-allowed opacity-75"
                         />
                       )}
@@ -1352,7 +1361,7 @@ export const DepartmentDashboardPage: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        value={targetDueDate}
+                        value={t(targetDueDate)}
                         onChange={(e) => setTargetDueDate(e.target.value)}
                         className="w-full p-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-kmc-navy/30 focus:outline-none"
                         required

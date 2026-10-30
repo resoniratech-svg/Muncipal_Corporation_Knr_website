@@ -205,20 +205,20 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
               <span className="opacity-70 text-xs font-normal">{t('Search:')}</span>
               <strong className="font-semibold truncate">"{currentSearch}"</strong>
               {selectedOption && (
-                <span className="opacity-80 text-xs font-normal">({selectedOption.label})</span>
+                <span className="opacity-80 text-xs font-normal">({t(selectedOption.label)})</span>
               )}
             </span>
           ) : selectedOption ? (
             <span className="flex items-center gap-2 truncate">
-              <span className="truncate font-semibold">{selectedOption.label}</span>
+              <span className="truncate font-semibold">{t(selectedOption.label)}</span>
               {selectedOption.badge && (
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-500 shrink-0">
-                  {selectedOption.badge}
+                  {t(selectedOption.badge)}
                 </span>
               )}
             </span>
           ) : (
-            <span className="opacity-50">{effectivePlaceholder}</span>
+            <span className="opacity-50">{t(effectivePlaceholder)}</span>
           )}
         </span>
 
@@ -343,16 +343,16 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="truncate">{opt.label}</span>
+                        <span className="truncate">{t(opt.label)}</span>
                         {opt.badge && (
                           <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-500 shrink-0">
-                            {opt.badge}
+                            {t(opt.badge)}
                           </span>
                         )}
                       </div>
                       {opt.sublabel && (
                         <div className="text-[10px] opacity-70 truncate mt-0.5">
-                          {opt.sublabel}
+                          {t(opt.sublabel)}
                         </div>
                       )}
                     </div>

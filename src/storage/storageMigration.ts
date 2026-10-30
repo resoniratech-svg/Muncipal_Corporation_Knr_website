@@ -10,6 +10,7 @@ import { INITIAL_NOTIFICATIONS } from '../data/notifications';
 import { WARD_27_PROJECTS } from '../data/budget';
 import { clearStoredPhotos, resolvePhoto } from '../photos/photoStore';
 import { getStoredPayments } from '../data/payments';
+import { staffCategoryRepository } from './repositories/staffCategoryRepository';
 
 // Extended demo users including Citizen 2 for isolation testing
 export const EXTENDED_DEMO_USERS = {
@@ -98,20 +99,39 @@ export function healDemoUsers(): void {
       const user = existingUsers[key].user;
       const demoUser = (demoRecord as any).user;
       let userChanged = false;
-      if (!user.staffCategory && demoUser.staffCategory) {
+      if (demoUser.staffCategory && user.staffCategory !== demoUser.staffCategory) {
         user.staffCategory = demoUser.staffCategory;
         userChanged = true;
       }
-      if (!user.staffCategoryId && demoUser.staffCategoryId) {
+      if (demoUser.staffCategoryId && user.staffCategoryId !== demoUser.staffCategoryId) {
         user.staffCategoryId = demoUser.staffCategoryId;
         userChanged = true;
       }
-      if ((!user.skills || user.skills.length === 0) && demoUser.skills) {
-        user.skills = demoUser.skills;
+      if (Array.isArray(demoUser.skills)) {
+        if (!Array.isArray(user.skills) || user.skills.length === 0) {
+          user.skills = [...demoUser.skills];
+          userChanged = true;
+        } else {
+          for (const s of demoUser.skills) {
+            if (!user.skills.includes(s)) {
+              user.skills.push(s);
+              userChanged = true;
+            }
+          }
+        }
+      }
+      if (demoUser.wardId !== undefined && user.wardId !== demoUser.wardId) {
+        user.wardId = demoUser.wardId;
         userChanged = true;
       }
-      if (user.wardId === undefined && demoUser.wardId !== undefined) {
-        user.wardId = demoUser.wardId;
+      if (Array.isArray(demoUser.assignedWardIds)) {
+        if (!Array.isArray(user.assignedWardIds) || JSON.stringify(user.assignedWardIds) !== JSON.stringify(demoUser.assignedWardIds)) {
+          user.assignedWardIds = [...demoUser.assignedWardIds];
+          userChanged = true;
+        }
+      }
+      if (demoUser.assignedWardName && user.assignedWardName !== demoUser.assignedWardName) {
+        user.assignedWardName = demoUser.assignedWardName;
         userChanged = true;
       }
       if (user.isActive === undefined && demoUser.isActive !== undefined) {
@@ -313,6 +333,7 @@ export function healDepartments(): void {
     let changed = false;
     const existingIds = new Set(grievances.map((g) => g.id));
     const updated = grievances.map((g) => {
+      let itemChanged = false;
       const d = g.department || '';
       let newDept = d;
       if (d === 'Engineering') newDept = 'Engineering Section';
@@ -321,9 +342,21 @@ export function healDepartments(): void {
       else if (d === 'Health') newDept = 'Sanitation Section';
       else if (d === 'Town Planning') newDept = 'Town Planning Section (TPS)';
 
+      let updatedG = g;
       if (newDept !== d) {
+        updatedG = { ...updatedG, department: newDept };
+        itemChanged = true;
+      }
+
+      const correctCat = staffCategoryRepository.findRequiredCategoryForGrievance(updatedG.category, updatedG.department).name;
+      if (updatedG.requiredStaffCategory !== correctCat) {
+        updatedG = { ...updatedG, requiredStaffCategory: correctCat };
+        itemChanged = true;
+      }
+
+      if (itemChanged) {
         changed = true;
-        return { ...g, department: newDept };
+        return updatedG;
       }
       return g;
     });

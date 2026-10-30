@@ -141,8 +141,8 @@ export const WardPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-kmc-bg">
       <BannerStrip
-        title="4.2 Tier 2: Ward / Division Management System"
-        tagline="Operational interface for execution and monitoring at ground level"
+        title={t("4.2 Tier 2: Ward / Division Management System")}
+        tagline={t("Operational interface for execution and monitoring at ground level")}
         actionButton={
           isCorporator ? (
             <div className="flex items-center gap-1.5 bg-purple-900/80 px-3 py-1.5 rounded-lg text-purple-100 border border-purple-400/40 text-xs font-semibold">
@@ -158,11 +158,11 @@ export const WardPage: React.FC = () => {
                 onChange={(val) => setActiveWardId(Number(val))}
                 variant="dark"
                 size="sm"
-                searchPlaceholder="Search 66 wards..."
+                searchPlaceholder={t("Search 66 wards...")}
                 options={wards.map((w) => ({
                   value: w.id,
-                  label: `Ward ${w.id}: ${w.name}`,
-                  sublabel: w.corporator ? `Corporator: ${w.corporator}` : undefined,
+                  label: t('Ward {{id}}: {{name}}', { id: w.id, name: t(w.name) }),
+                  sublabel: w.corporator ? t('Corporator: {{name}}', { name: t(w.corporator) }) : undefined,
                 }))}
                 className="w-full sm:w-72"
               />
@@ -185,10 +185,10 @@ export const WardPage: React.FC = () => {
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold font-heading uppercase text-slate-900 mt-1">
-              {t('Ward Management Dashboard')} – {effectiveWard.name}
+              {t('Ward Management Dashboard – {{name}}', { name: t(effectiveWard.name) })}
             </h2>
             <p className="text-xs text-slate-600 mt-0.5">
-              {t('Ward Corporator')}: <strong className="text-slate-900">{effectiveWard.corporator}</strong> | {t('Population')}: {effectiveWard.population.toLocaleString('en-IN')}
+              {t('Ward Corporator')}: <strong className="text-slate-900">{t(effectiveWard.corporator)}</strong> | {t('Population')}: {effectiveWard.population.toLocaleString('en-IN')}
             </p>
           </div>
 
@@ -207,7 +207,7 @@ export const WardPage: React.FC = () => {
           <KpiCard
             label="Total Grievances"
             value={totalWardCount}
-            sublabel={`Ward ${effectiveWard.id} Active Base`}
+            sublabel={t('Ward {{ward}} Active Base', { ward: effectiveWard.id })}
             icon={<HardHat className="w-5 h-5 text-kmc-navy" />}
             highlightColor="border-l-kmc-navy"
             onClick={() => handleKpiClick('all')}
@@ -283,11 +283,11 @@ export const WardPage: React.FC = () => {
                 <div key={p.receiptNo} className="p-2 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-between">
                   <div>
                     <span className="font-bold text-slate-800 block">{t(p.taxType)}</span>
-                    <span className="text-[10px] text-slate-500 font-mono">{p.receiptNo} · Door {p.doorNo} ({p.citizenName})</span>
+                    <span className="text-[10px] text-slate-500 font-mono">{p.receiptNo} · {t("Door {{door}} ({{name}})", { door: p.doorNo, name: p.citizenName })}</span>
                   </div>
                   <div className="text-right">
                     <span className="font-mono font-bold text-emerald-700 block">₹{p.amount.toLocaleString()}</span>
-                    <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded">Reconciled</span>
+                    <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded">{t("Reconciled")}</span>
                   </div>
                 </div>
               ))}

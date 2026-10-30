@@ -703,17 +703,17 @@ export const ReportWizard: React.FC = () => {
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                              {b.department}
+                              {t(b.department)}
                             </span>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${b.badgeColor}`}>
-                              {b.badge}
+                              {t(b.badge)}
                             </span>
                           </div>
                           <h3 className="text-base font-bold font-heading text-slate-900">
                             {t(b.title)}
                           </h3>
                           <div className="mt-2 space-y-1 text-xs text-slate-600">
-                            <p><span className="text-slate-400">{b.refLabel}:</span> <strong className="font-mono text-slate-900">{b.refValue}</strong></p>
+                            <p><span className="text-slate-400">{t(b.refLabel)}:</span> <strong className="font-mono text-slate-900">{b.refValue}</strong></p>
                             <p><span className="text-slate-400">{t("Door No")}:</span> <strong>{b.doorNo}</strong></p>
                             <p><span className="text-slate-400">{t("Owner")}:</span> <strong>{b.owner}</strong></p>
                           </div>
@@ -1042,7 +1042,7 @@ export const ReportWizard: React.FC = () => {
                               <Icon className="w-5 h-5" />
                             </span>
                             <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                              {c.sla} SLA
+                              {t(c.sla)} {t('SLA')}
                             </span>
                           </div>
                           <h3 className="text-base font-bold font-heading text-slate-900">
@@ -1054,7 +1054,7 @@ export const ReportWizard: React.FC = () => {
                         </div>
 
                         <div className="mt-3 pt-2.5 border-t border-slate-200 flex items-center justify-between text-xs">
-                          <span className="text-slate-500">{t("Fee")}: <strong>{c.fee}</strong></span>
+                          <span className="text-slate-500">{t("Fee")}: <strong>{t(c.fee)}</strong></span>
                           <span className={`font-bold px-2.5 py-1 rounded-lg transition-colors ${
                             isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
                           }`}>

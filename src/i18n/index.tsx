@@ -124,8 +124,8 @@ export const PrefsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // 5. Compound: Colon split (e.g. "Drainage: Drain Overflow near main intersection" or "Live Update: 10:30 AM")
       if (trimmed.includes(': ')) {
         const colonIdx = trimmed.indexOf(': ');
-        const prefix = trimmed.slice(0, colonIdx);
-        const suffix = trimmed.slice(colonIdx + 2);
+        const prefix = trimmed.slice(0, colonIdx).trim();
+        const suffix = trimmed.slice(colonIdx + 2).trim();
         const transPrefix = platformDict[prefix] || lowerMap[prefix.toLowerCase()];
         const transSuffix = platformDict[suffix] || lowerMap[suffix.toLowerCase()] || suffix;
         if (transPrefix) {
@@ -133,23 +133,10 @@ export const PrefsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }
 
-      // 6. Compound: Dash/Hyphen split (e.g. "Ward Management Dashboard – Green Park Colony" or "Ward 27 – Green Park Colony")
-      if (trimmed.includes(' – ') || trimmed.includes(' - ')) {
-        const sep = trimmed.includes(' – ') ? ' – ' : ' - ';
-        const parts = trimmed.split(sep);
-        if (parts.length === 2) {
-          const p0 = platformDict[parts[0]] || lowerMap[parts[0].toLowerCase()] || (
-            /^Ward (\d+)$/i.test(parts[0]) ? (prefs.lang === 'te' ? `వార్డు ${parts[0].replace(/Ward /i, '')}` : `वार्ड ${parts[0].replace(/Ward /i, '')}`) : parts[0]
-          );
-          const p1 = platformDict[parts[1]] || lowerMap[parts[1].toLowerCase()] || parts[1];
-          return `${p0} – ${p1}`;
-        }
-      }
-
-      // 7. Compound: Dot / Bullet separator " · " or " • " (e.g. "Ward 27 • Green Park Colony" or "GRV-2024-27-0045 · Ward 27 · Ramakrishna Nagar")
-      if (trimmed.includes(' · ') || trimmed.includes(' • ')) {
-        const sep = trimmed.includes(' · ') ? ' · ' : ' • ';
-        const parts = trimmed.split(sep);
+      // 6. Compound: Dash/Hyphen split (e.g. "Ward Management Dashboard – Green Park Colony" or "Ward 27 — Green Park Colony")
+      const dashSep = [' — ', ' – ', ' - ', ' -- '].find((s) => trimmed.includes(s));
+      if (dashSep) {
+        const parts = trimmed.split(dashSep);
         const translatedParts = parts.map((part) => {
           const p = part.trim();
           if (platformDict[p]) return platformDict[p];
@@ -158,10 +145,31 @@ export const PrefsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (wardMatch) return prefs.lang === 'te' ? `వార్డు ${wardMatch[1]}` : `वार्ड ${wardMatch[1]}`;
           return p;
         });
-        return translatedParts.join(sep);
+        if (translatedParts.some((tp, idx) => tp !== parts[idx].trim())) {
+          return translatedParts.join(dashSep);
+        }
       }
 
-      // 8. Parenthesis role match (e.g. "Mahesh (Field Staff)" or "Suresh (Electrician)")
+      // 7. Compound: Dot / Bullet separator " · " or " • " or " | " (e.g. "PROPERTY TAX (HOUSE TAX) • Ward 27 • SLA: 48h")
+      const dotSep = [' · ', ' • ', ' | '].find((s) => trimmed.includes(s));
+      if (dotSep) {
+        const parts = trimmed.split(dotSep);
+        const translatedParts = parts.map((part) => {
+          const p = part.trim();
+          if (platformDict[p]) return platformDict[p];
+          if (lowerMap[p.toLowerCase()]) return lowerMap[p.toLowerCase()];
+          const wardMatch = p.match(/^Ward (\d+)$/i);
+          if (wardMatch) return prefs.lang === 'te' ? `వార్డు ${wardMatch[1]}` : `वार्ड ${wardMatch[1]}`;
+          const slaMatch = p.match(/^SLA:?\s*(\d+)h$/i);
+          if (slaMatch) return prefs.lang === 'te' ? `ఎస్.ఎల్.ఎ: ${slaMatch[1]} గంటలు` : `एसएलए: ${slaMatch[1]} घंटे`;
+          return p;
+        });
+        if (translatedParts.some((tp, idx) => tp !== parts[idx].trim())) {
+          return translatedParts.join(dotSep);
+        }
+      }
+
+      // 8. Parenthesis role match (e.g. "Mahesh (Field Staff)" or "Property Tax (House Tax)")
       const parenMatch = trimmed.match(/^(.+?)\s*\((.+?)\)$/);
       if (parenMatch) {
         const namePart = parenMatch[1].trim();

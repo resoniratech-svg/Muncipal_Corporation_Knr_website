@@ -579,14 +579,14 @@ export const CitizenPage: React.FC = () => {
                             {p.refValue}
                           </td>
                           <td className="py-3 px-3 text-slate-700 whitespace-nowrap">
-                            {p.doorNo}, Ward {p.wardId}
+                            {t("Door {{door}}, Ward {{ward}}", { door: p.doorNo, ward: p.wardId })}
                           </td>
                           <td className="py-3 px-3 font-mono font-extrabold text-slate-900 whitespace-nowrap">
                             ₹{p.amount.toLocaleString()}
                           </td>
                           <td className="py-3 px-3 whitespace-nowrap">
                             <span className="font-mono text-[11px] text-slate-800 font-bold block">{p.receivingAccount}</span>
-                            <span className="text-[10px] text-slate-500 block truncate max-w-[180px]">{p.officerInCharge} ({p.department})</span>
+                            <span className="text-[10px] text-slate-500 block truncate max-w-[180px]">{t(p.officerInCharge)} ({t(p.department)})</span>
                           </td>
                           <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
                             {p.paidTimeStr}
@@ -860,14 +860,14 @@ export const CitizenPage: React.FC = () => {
                             {p.refValue}
                           </td>
                           <td className="py-3 px-3 text-slate-700 whitespace-nowrap">
-                            {p.doorNo}, Ward {p.wardId}
+                            {t("Door {{door}}, Ward {{ward}}", { door: p.doorNo, ward: p.wardId })}
                           </td>
                           <td className="py-3 px-3 font-mono font-extrabold text-slate-900 whitespace-nowrap">
                             ₹{p.amount.toLocaleString()}
                           </td>
                           <td className="py-3 px-3 whitespace-nowrap">
                             <span className="font-mono text-[11px] text-slate-800 font-bold block">{p.receivingAccount}</span>
-                            <span className="text-[10px] text-slate-500 block truncate max-w-[180px]">{p.officerInCharge} ({p.department})</span>
+                            <span className="text-[10px] text-slate-500 block truncate max-w-[180px]">{t(p.officerInCharge)} ({t(p.department)})</span>
                           </td>
                           <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
                             {p.paidTimeStr}

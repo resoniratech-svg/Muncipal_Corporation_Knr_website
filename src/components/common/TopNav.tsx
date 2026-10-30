@@ -127,11 +127,14 @@ export const TopNav: React.FC = () => {
       const specificTitle = currentUser.roleTitle || (currentUser.departmentName ? `Department Officer (${currentUser.departmentName.split('/')[0].trim()})` : base.title);
       return {
         ...base,
-        title: specificTitle,
+        title: t(specificTitle),
       };
     }
-    return base;
-  }, [activeRole, currentUser]);
+    return {
+      ...base,
+      title: t(base.title),
+    };
+  }, [activeRole, currentUser, t]);
 
   const handleLogout = () => {
     logout();

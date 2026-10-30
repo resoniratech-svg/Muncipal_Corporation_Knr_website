@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { User, UserRole, Permission, AuthSession } from './authTypes';
 import { DemoUserRecord } from './mockUsers';
 import { hasPermission as checkPermission, hasAnyRole } from './permissions';
@@ -61,7 +61,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
-  const currentUser = session?.user || null;
+  const currentUser = useMemo(() => {
+    if (!session?.user?.id) return null;
+    const freshRecord = userRepository.getById(session.user.id);
+    if (freshRecord) {
+      return { ...session.user, ...freshRecord };
+    }
+    return session.user;
+  }, [session, usersState]);
   const isAuthenticated = !!currentUser;
   const activeRole = previewRole || currentUser?.role || null;
 

@@ -74,6 +74,10 @@ export const staffCategoryRepository = {
     // 2. Keyword matching on name or description
     for (const cat of all) {
       if (
+        (catLower.includes('tax') || catLower.includes('revenue') || catLower.includes('property') || catLower.includes('vlt') || catLower.includes('trade')) && cat.id === 'revenue-inspector' ||
+        (catLower.includes('birth') || catLower.includes('death') || catLower.includes('certificate')) && cat.id === 'civil-registrar-inspector' ||
+        (catLower.includes('pension') || catLower.includes('asara') || catLower.includes('mepma') || catLower.includes('welfare') || catLower.includes('shg')) && cat.id === 'welfare-organizer' ||
+        (catLower.includes('building') || catLower.includes('layout') || catLower.includes('permission') || catLower.includes('tgbpass') || catLower.includes('tg-bpass') || catLower.includes('planning')) && cat.id === 'town-planning-inspector' ||
         catLower.includes('drain') && cat.id === 'drainage-worker' ||
         (catLower.includes('road') || catLower.includes('pothole')) && cat.id === 'road-repair-worker' ||
         (catLower.includes('garbage') || catLower.includes('waste') || catLower.includes('clean')) && cat.id === 'sanitation-worker' ||
@@ -81,7 +85,7 @@ export const staffCategoryRepository = {
         (catLower.includes('water') || catLower.includes('pipe') || catLower.includes('leak')) && cat.id === 'water-technician' ||
         (catLower.includes('health') || catLower.includes('pest') || catLower.includes('mosquito')) && cat.id === 'public-health-worker' ||
         (catLower.includes('park') || catLower.includes('tree') || catLower.includes('garden')) && cat.id === 'parks-worker' ||
-        (catLower.includes('civil') || catLower.includes('building') || catLower.includes('footpath')) && cat.id === 'civil-maintenance-worker'
+        (catLower.includes('civil') || catLower.includes('footpath') || catLower.includes('divider')) && cat.id === 'civil-maintenance-worker'
       ) {
         return cat;
       }
@@ -89,6 +93,26 @@ export const staffCategoryRepository = {
 
     // 3. Fallback by department
     if (deptLower) {
+      if (deptLower.includes('revenue')) {
+        const rev = all.find((c) => c.id === 'revenue-inspector');
+        if (rev) return rev;
+      }
+      if (deptLower.includes('statistic') || deptLower.includes('birth') || deptLower.includes('death')) {
+        const stat = all.find((c) => c.id === 'civil-registrar-inspector');
+        if (stat) return stat;
+      }
+      if (deptLower.includes('welfare') || deptLower.includes('mepma') || deptLower.includes('asara')) {
+        const wel = all.find((c) => c.id === 'welfare-organizer');
+        if (wel) return wel;
+      }
+      if (deptLower.includes('town') || deptLower.includes('planning')) {
+        const tp = all.find((c) => c.id === 'town-planning-inspector');
+        if (tp) return tp;
+      }
+      if (deptLower.includes('sanitation')) {
+        const san = all.find((c) => c.id === 'sanitation-worker');
+        if (san) return san;
+      }
       const matchDept = all.find(
         (c) =>
           c.departmentId.toLowerCase() === deptLower ||
@@ -114,9 +138,15 @@ export const staffCategoryRepository = {
 
     // Strict canonical ward verification
     if (targetWardId !== undefined && targetWardId !== null) {
-      const staffWard = normalizeWardId(staff.wardId || staff.assignedWardIds?.[0]);
       const reqWard = normalizeWardId(targetWardId);
-      if (staffWard !== null && reqWard !== null && staffWard !== reqWard) {
+      const assignedWards = (staff.assignedWardIds || []).map(normalizeWardId).filter((w): w is number => w !== null);
+      if (staff.wardId !== undefined && staff.wardId !== null) {
+        const primary = normalizeWardId(staff.wardId);
+        if (primary !== null && !assignedWards.includes(primary)) {
+          assignedWards.push(primary);
+        }
+      }
+      if (reqWard !== null && assignedWards.length > 0 && !assignedWards.includes(reqWard)) {
         return false;
       }
     }
@@ -143,11 +173,16 @@ export const staffCategoryRepository = {
     if (
       staffCat.includes(reqCatName) ||
       reqCatName.includes(staffCat) ||
+      (reqCatId === 'revenue-inspector' && (staffCat.includes('revenue') || staffCat.includes('tax') || staffCat.includes('bill'))) ||
+      (reqCatId === 'civil-registrar-inspector' && (staffCat.includes('registry') || staffCat.includes('birth') || staffCat.includes('death') || staffCat.includes('stat'))) ||
+      (reqCatId === 'welfare-organizer' && (staffCat.includes('welfare') || staffCat.includes('mepma') || staffCat.includes('asara') || staffCat.includes('pension') || staffCat.includes('community'))) ||
+      (reqCatId === 'town-planning-inspector' && (staffCat.includes('town') || staffCat.includes('plan') || staffCat.includes('building') || staffCat.includes('survey'))) ||
       (reqCatId === 'road-repair-worker' && (staffCat.includes('road') || staffCat.includes('pothole'))) ||
       (reqCatId === 'drainage-worker' && staffCat.includes('drain')) ||
       (reqCatId === 'sanitation-worker' && (staffCat.includes('sanitation') || staffCat.includes('garbage'))) ||
       (reqCatId === 'electrician' && (staffCat.includes('electric') || staffCat.includes('light'))) ||
-      (reqCatId === 'water-technician' && (staffCat.includes('water') || staffCat.includes('pipe')))
+      (reqCatId === 'water-technician' && (staffCat.includes('water') || staffCat.includes('pipe'))) ||
+      (reqCatId === 'civil-maintenance-worker' && (staffCat.includes('civil') || staffCat.includes('footpath') || staffCat.includes('masonry')))
     ) {
       return true;
     }
@@ -166,11 +201,9 @@ export const staffCategoryRepository = {
       return true;
     }
 
-    // 4. Fallback only if no category or skill is assigned, and department matches
-    if (!staff.staffCategory && !staff.staffCategoryId && staffSkills.length === 0) {
-      if (staffDept && reqDept && staffDept === reqDept) {
-        return true;
-      }
+    // 4. Fallback if department matches
+    if (staffDept && reqDept && staffDept === reqDept) {
+      return true;
     }
 
     return false;
@@ -195,13 +228,15 @@ export const staffCategoryRepository = {
       activeOnly: true,
     });
 
-    const requiredCategory =
-      grievance.requiredStaffCategory ||
-      this.findRequiredCategoryForGrievance(grievance.category, grievance.department).name;
+    const determinedCat = this.findRequiredCategoryForGrievance(grievance.category, grievance.department).name;
+    const requiredCategory = determinedCat || grievance.requiredStaffCategory;
 
-    return wardStaff.filter((s) =>
+    const matched = wardStaff.filter((s) =>
       this.isStaffEligible(s, requiredCategory, canonicalWard)
     );
+    if (matched.length > 0) return matched;
+    // Fallback to active ward field staff so corporator validation is never blocked
+    return wardStaff;
   },
 
   /**
@@ -262,8 +297,14 @@ export const staffCategoryRepository = {
         continue;
       }
 
-      const staffWard = normalizeWardId(staff.wardId || staff.assignedWardIds?.[0]);
-      if (staffWard === null || staffWard !== targetWardId) {
+      const assignedWards = (staff.assignedWardIds || []).map(normalizeWardId).filter((w): w is number => w !== null);
+      if (staff.wardId !== undefined && staff.wardId !== null) {
+        const primary = normalizeWardId(staff.wardId);
+        if (primary !== null && !assignedWards.includes(primary)) {
+          assignedWards.push(primary);
+        }
+      }
+      if (assignedWards.length === 0 || !assignedWards.includes(targetWardId)) {
         rejectedWardMismatch++;
         continue;
       }

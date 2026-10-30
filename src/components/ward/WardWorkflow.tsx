@@ -77,7 +77,7 @@ export const NewComplaintsQueue: React.FC<{ wardId: number }> = ({ wardId }) => 
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-base font-bold">{t(g.category)}: {g.description}</p>
+                    <p className="text-base font-bold">{t(g.category)}: {t(g.description)}</p>
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
                       {t('Requires')}: {t(requiredCategory.name)}
                     </span>
